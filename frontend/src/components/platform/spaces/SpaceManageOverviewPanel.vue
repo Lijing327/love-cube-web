@@ -600,5 +600,14 @@ function formatDate(v) {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .metric-card p {
+    display: none;
+  }
 }
 </style>

@@ -1564,7 +1564,8 @@ onBeforeUnmount(() => {
 
   .platform-main {
     min-height: calc(100vh - 74px);
-    padding-bottom: 0;
+    /* 为固定底栏预留空间，避免表单/列表末尾操作被遮挡 */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
   .co-creation-toolbar {

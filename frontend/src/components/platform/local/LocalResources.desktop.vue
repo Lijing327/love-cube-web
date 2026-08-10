@@ -185,7 +185,21 @@ onMounted(load)
 }
 
 @media (max-width: 767px) {
-  .local-page { width: calc(100% - 24px); margin-bottom: calc(80px + env(safe-area-inset-bottom)); }
-  .local-list { grid-template-columns: 1fr; }
+  .local-page { width: calc(100% - 24px); margin: 10px auto calc(88px + env(safe-area-inset-bottom)); gap: 10px; }
+  .local-hero { padding: 12px 14px; }
+  .local-hero h1 { font-size: 20px; margin: 0; }
+  .local-hero > p { margin: 4px 0 0; font-size: 12px; line-height: 1.4; }
+  .hero-contribute { font-size: 12px; }
+  .hero-insights { margin-top: 8px; gap: 6px; }
+  .insight-chip { padding: 3px 8px; font-size: 11px; }
+  .local-filters { padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .local-filter-btn { padding: 5px 10px; font-size: 12px; }
+  .local-list { grid-template-columns: 1fr; gap: 8px; }
+  .local-card { padding: 12px; }
+  .local-card-head h3 { font-size: 15px; }
+  .local-meta { margin-top: 6px; gap: 8px; font-size: 12px; }
+  .local-summary { margin-top: 6px; min-height: 0; font-size: 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .local-actions { margin-top: 8px; }
+  .local-actions .platform-btn { height: 36px; font-size: 13px; flex: 1; }
 }
 </style>

@@ -1846,7 +1846,26 @@ onMounted(() => {
   }
 
   .hero-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .hero-stats article {
+    padding: 8px 6px;
+  }
+
+  .hero-stats strong {
+    margin-top: 4px;
+    font-size: 18px;
+  }
+
+  .hero-stats small {
+    display: none;
+  }
+
+  .member-summary-grid .metric-card,
+  .review-summary .metric-card {
+    min-height: 0;
   }
 
   .hero-actions-mobile {
@@ -1870,7 +1889,8 @@ onMounted(() => {
 
   .member-summary-grid,
   .review-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .member-table-head {

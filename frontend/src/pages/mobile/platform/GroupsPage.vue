@@ -17,7 +17,6 @@
     <div class="quick">
       <router-link to="/m/platform/my-groups">我的团体</router-link>
       <router-link :to="groupsPath('season')">赛季榜</router-link>
-      <button type="button" @click="goCreate">创建团体</button>
     </div>
 
     <p v-if="message" class="flash" :class="{ err: messageType === 'error' }">{{ message }}</p>
@@ -251,8 +250,8 @@ onMounted(async () => {
 <style scoped>
 .groups-m {
   min-height: 100vh;
-  padding: 14px 14px 28px;
-  background: linear-gradient(180deg, #ecfdf5 0%, #f4f5fb 100px, #f4f5fb 100%);
+  padding: 12px 14px 28px;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f4f5fb 80px, #f4f5fb 100%);
 }
 
 .groups-m-head {
@@ -279,14 +278,18 @@ onMounted(async () => {
 
 .groups-m-head h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
 }
 
 .groups-m-head p {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font-size: 12px;
   color: var(--lc-subtle, #64748b);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .create-btn {
@@ -405,7 +408,7 @@ onMounted(async () => {
 
 .cover {
   display: block;
-  height: 120px;
+  height: 72px;
   overflow: hidden;
 }
 
@@ -416,7 +419,7 @@ onMounted(async () => {
 }
 
 .body {
-  padding: 12px 14px 14px;
+  padding: 10px 12px 12px;
 }
 
 .title-row {

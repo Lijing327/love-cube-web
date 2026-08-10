@@ -1013,52 +1013,55 @@ onMounted(async () => {
 
   .bulletin-hero {
     grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 28px 18px;
+    gap: 12px;
+    padding: 16px 14px;
     border-radius: 14px;
   }
 
   .hero-copy {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 10px;
   }
 
   .hero-icon {
-    width: 68px;
-    height: 68px;
+    width: 48px;
+    height: 48px;
   }
 
   .hero-icon span {
-    width: 34px;
-    height: 34px;
-    font-size: 21px;
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
   }
 
   .hero-title {
-    font-size: 30px;
+    font-size: 22px;
   }
 
   .hero-subtitle {
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .hero-stats {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 8px;
   }
 
   .hero-stat {
-    padding: 12px;
+    padding: 8px 10px;
   }
 
   .hero-art {
-    min-height: 150px;
+    display: none;
   }
 
   .megaphone {
-    width: 210px;
-    height: 150px;
-    transform: scale(0.8) rotate(-8deg);
+    display: none;
   }
 
   .hero-search {

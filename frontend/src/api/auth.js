@@ -19,3 +19,8 @@ export function changePassword(data) {
 export function changePhone(data) {
   return request.put('/auth/phone', data)
 }
+
+/** 绑定或换绑当前登录用户邮箱（需验证登录密码） */
+export function changeEmail(data) {
+  return request.put('/auth/email', data)
+}

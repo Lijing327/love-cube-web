@@ -195,21 +195,98 @@ onMounted(load)
 }
 
 @media (max-width: 720px) {
+  .season-page {
+    gap: 10px;
+    padding: 0 0 calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .season-hero {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .season-hero .platform-title {
+    font-size: 20px;
+  }
+
+  .season-hero .platform-subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .season-range {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
+  .season-hero .platform-btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  /* 规则已在 hero 文案中说明，移动端隐藏重复卡片 */
+  .rules-card {
+    display: none;
+  }
+
+  .rank-card {
+    padding: 12px;
+  }
+
+  .rank-card h2 {
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+
   .rank-table thead {
     display: none;
   }
 
+  .rank-table,
+  .rank-table tbody {
+    display: block;
+    width: 100%;
+  }
+
   .rank-table tr {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 12px;
-    padding: var(--lc-space-3) 0;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 2px 8px;
+    align-items: center;
+    padding: 10px 0;
     border-bottom: 1px solid var(--lc-border);
   }
 
   .rank-table td {
     border: none;
-    padding: 2px 0;
+    padding: 0;
+  }
+
+  .rank-table td:nth-child(1) {
+    grid-row: 1 / span 2;
+    font-weight: 800;
+    color: var(--lc-muted);
+  }
+
+  .rank-table td:nth-child(2) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-table td:nth-child(3) {
+    grid-row: 1 / span 2;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .rank-table td:nth-child(4),
+  .rank-table td:nth-child(5),
+  .rank-table td:nth-child(6) {
+    display: none;
   }
 }
 </style>

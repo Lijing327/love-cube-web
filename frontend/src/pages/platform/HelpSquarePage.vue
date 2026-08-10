@@ -774,21 +774,127 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .help-hub {
     width: calc(100% - 24px);
-    padding-top: 16px;
+    padding-top: 10px;
   }
 
   .help-hero {
-    padding: 18px;
+    padding: 12px;
+    gap: 10px;
   }
 
   .hero-copy h1 {
-    font-size: 26px;
+    font-size: 20px;
   }
 
-  .hero-metrics,
-  .filter-grid,
-  .side-metrics {
+  .hero-desc {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hero-status {
+    margin-top: 8px;
+  }
+
+  .hero-actions {
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .hero-actions .platform-btn {
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .hero-metrics {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 8px;
+    padding: 6px 4px;
+    border: 1px solid var(--lc-border);
+    border-radius: 10px;
+    background: var(--lc-surface);
+  }
+
+  .hero-metrics .metric-card {
+    flex: 1 1 0;
+    min-width: 68px;
+    min-height: 0;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 0;
+    border-top: 0;
+    box-shadow: none;
+    background: transparent;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .hero-metrics .metric-card:not(:first-child) {
+    border-left: 1px solid var(--lc-border);
+  }
+
+  .hero-metrics .metric-card:first-child {
+    grid-column: auto;
+  }
+
+  .hero-metrics .metric-card strong {
+    font-size: 15px;
+  }
+
+  .hero-metrics .metric-label {
+    font-size: 10px;
+  }
+
+  .hero-metrics .metric-card p {
+    display: none;
+  }
+
+  .dashboard-section {
+    padding: 12px;
+  }
+
+  .operation-section-head {
+    margin-bottom: 8px;
+  }
+
+  .operation-section-head h2 {
+    font-size: 16px;
+  }
+
+  .action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .action-card {
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .action-card p {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 11px;
+  }
+
+  .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .side-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .help-card-head {

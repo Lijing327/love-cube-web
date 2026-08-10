@@ -39,6 +39,7 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private static final int USERNAME_MAX_LENGTH = 20;
     private static final Pattern CHINA_MOBILE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -305,6 +306,64 @@ public class AuthController {
     }
 
     @Transactional
+    @PutMapping("/email")
+    public ResponseEntity<?> changeEmail(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> body
+    ) {
+        String password = body.get("password");
+        String newEmail = normalizeEmail(body.get("newEmail"));
+        String confirmEmail = normalizeEmail(body.get("confirmEmail"));
+
+        if (password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "请输入登录密码以验证身份"));
+        }
+        if (newEmail == null || newEmail.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "请输入邮箱地址"));
+        }
+        if (!EMAIL_PATTERN.matcher(newEmail).matches()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "请输入有效的邮箱地址"));
+        }
+        if (confirmEmail == null || confirmEmail.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "请再次输入邮箱地址"));
+        }
+        if (!newEmail.equals(confirmEmail)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "两次输入的邮箱不一致"));
+        }
+
+        User user = adminAuthService.requireUser(authHeader);
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "登录密码不正确"));
+        }
+
+        String currentEmail = normalizeEmail(user.getEmail());
+        if (currentEmail != null && currentEmail.equals(newEmail)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "新邮箱不能与当前邮箱相同"));
+        }
+
+        User existing = userRepository.findByEmail(newEmail);
+        if (existing != null && !Objects.equals(existing.getUserid(), user.getUserid())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "该邮箱已被其他账号使用"));
+        }
+
+        try {
+            user.setEmail(newEmail);
+            userRepository.save(user);
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "邮箱已更新");
+            result.put("email", newEmail);
+            return ResponseEntity.ok(result);
+        } catch (DataIntegrityViolationException ex) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            log.warn("Change email failed: data integrity — userId={}, email={}", user.getUserid(), newEmail);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "message",
+                    "邮箱更新失败：该地址可能已被占用，请更换后重试"
+            ));
+        }
+    }
+
+    @Transactional
     @PutMapping("/phone")
     public ResponseEntity<?> changePhone(
             @RequestHeader("Authorization") String authHeader,
@@ -368,6 +427,14 @@ public class AuthController {
         }
         String digits = rawPhone.replaceAll("\\s+", "");
         return digits.isEmpty() ? null : digits;
+    }
+
+    private String normalizeEmail(String rawEmail) {
+        if (rawEmail == null) {
+            return null;
+        }
+        String email = rawEmail.trim().toLowerCase();
+        return email.isEmpty() ? null : email;
     }
 
     private String normalizeUsername(String rawUsername) {

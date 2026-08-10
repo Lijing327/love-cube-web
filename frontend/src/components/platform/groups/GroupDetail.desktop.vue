@@ -4373,6 +4373,20 @@ onMounted(async () => {
     margin-right: var(--lc-space-4);
   }
 
+  .detail-hero-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .detail-hero-metrics .metric-card {
+    min-height: 0;
+    padding: 8px 6px;
+  }
+
+  .detail-hero-metrics .metric-card p {
+    display: none;
+  }
+
   .hero-body {
     grid-template-columns: 1fr;
     padding: 0 var(--lc-space-4) var(--lc-space-4);

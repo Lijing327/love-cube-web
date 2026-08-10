@@ -9,6 +9,8 @@
     </header>
 
     <div class="sp-body">
+      <WechatNotifyEntryBanner />
+
       <!-- 筛选标签 -->
       <div class="nt-tab-row">
         <button
@@ -54,6 +56,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNotifications, markNotifRead, markAllNotifRead, getNotifUnreadCountCached } from '@/api/notification.js'
+import WechatNotifyEntryBanner from '@/components/platform/WechatNotifyEntryBanner.vue'
 
 const router = useRouter()
 

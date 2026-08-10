@@ -84,10 +84,50 @@ defineProps({
 
 @media (max-width: 760px) {
   .stats-band {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    margin-top: 12px;
+    padding: 8px 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stat-card {
+    flex: 1 1 0;
+    min-width: 72px;
+    min-height: 0;
     grid-template-columns: 1fr;
-    margin-top: 16px;
-    padding: 10px;
-    gap: 8px;
+    justify-items: center;
+    text-align: center;
+    gap: 2px;
+    padding: 8px 4px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .stat-card:not(:first-child) {
+    border-left: 1px solid var(--lc-border);
+  }
+
+  .stat-icon {
+    grid-row: auto;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .stat-card strong {
+    font-size: 15px;
+  }
+
+  .stat-card small {
+    font-size: 11px;
+  }
+
+  .stat-card em {
+    display: none;
   }
 }
 </style>

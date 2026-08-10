@@ -24,6 +24,7 @@ function normalizeUser(raw) {
     username: raw.username ?? raw.nickname ?? '',
     nickname: raw.nickname ?? raw.username ?? '',
     phone: raw.phone ?? raw.phoneNumber ?? '',
+    email: raw.email ?? '',
     role: raw.role ?? 'user',
     status: raw.status ?? 'active',
     verificationStatus: raw.verificationStatus ?? 'none',

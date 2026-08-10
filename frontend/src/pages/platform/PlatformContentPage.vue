@@ -696,7 +696,7 @@ onMounted(async () => {
   }
 
   .hero-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -706,8 +706,70 @@ onMounted(async () => {
     margin-top: var(--lc-space-3);
   }
 
+  .hub-hero {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .hero-copy h1 {
+    font-size: 22px;
+  }
+
+  .hero-copy p:not(.section-kicker) {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .filter-summary {
+    margin-top: 10px;
+  }
+
+  /* 四项指标压成单行条，避免 2x2 仍占首屏 */
   .hero-metrics {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    margin-top: 8px;
+    padding: 6px 4px;
+    border: 1px solid var(--lc-border);
+    border-radius: 10px;
+    background: var(--lc-surface);
+  }
+
+  .hero-metrics .metric-card {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 0;
+    border-top: 0;
+    box-shadow: none;
+    background: transparent;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .hero-metrics .metric-card:not(:first-child) {
+    border-left: 1px solid var(--lc-border);
+  }
+
+  .hero-metrics .metric-card strong {
+    font-size: 15px;
+  }
+
+  .hero-metrics .metric-label {
+    font-size: 10px;
+  }
+
+  .hero-metrics .metric-card p {
+    display: none;
   }
 
   .tab-row {

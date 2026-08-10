@@ -57,6 +57,8 @@
         </div>
       </div>
 
+      <WechatNotifyEntryBanner />
+
       <!-- 成长信息（紧凑：称号 + 数值一行，细进度条一行；任务/徽章见任务中心与上方入口） -->
       <div class="mh-card mh-growth-slim">
         <div class="mh-grow-line1">
@@ -295,6 +297,7 @@ import { useImageUpload } from '@/composables/useImageUpload.js'
 import MePersonalHub from '@/components/platform/me/MePersonalHub.desktop.vue'
 import MyInvitePanel from '@/components/common/MyInvitePanel.vue'
 import MhHeroBadgeLink from '@/components/platform/me/MhHeroBadgeLink.vue'
+import WechatNotifyEntryBanner from '@/components/platform/WechatNotifyEntryBanner.vue'
 import { getAvatar } from '@/utils/image.js'
 import { userAvatarUrlFromApi } from '@/utils/displayFields.js'
 
@@ -1946,6 +1949,21 @@ onBeforeUnmount(() => {
     width: 80px;
     height: 80px;
     font-size: 22px;
+  }
+
+  .workspace-item,
+  .quick-item {
+    min-height: 0;
+    padding: 12px 10px;
+    gap: 6px;
+  }
+
+  .workspace-item {
+    min-height: 88px;
+  }
+
+  .quick-item {
+    min-height: 72px;
   }
 }
 

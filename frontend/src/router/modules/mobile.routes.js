@@ -87,7 +87,7 @@ export default {
     },
     {
       path: 'platform/groups/create',
-      component: () => import('@/pages/platform/GroupCreatePage.vue'),
+      component: () => import('@/pages/mobile/platform/GroupCreatePage.vue'),
       meta: authPlatform
     },
     {

@@ -1,5 +1,7 @@
 <template>
   <section class="platform-page messages-page">
+    <WechatNotifyEntryBanner />
+
     <div class="platform-card messages-header">
       <h1>消息通知中心</h1>
       <p>统一接收平台通知、系统公告、活动通知与内容互动，并提供联谊消息入口</p>
@@ -76,6 +78,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { getNotifications, getNotificationsByType, markAllNotifRead, unwrapNotificationList } from '@/api/notification.js'
+import WechatNotifyEntryBanner from '@/components/platform/WechatNotifyEntryBanner.vue'
 
 const activeTab = ref(0)
 const platformNotices = ref([])

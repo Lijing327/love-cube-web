@@ -209,14 +209,38 @@ function itemKey(item) {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 767px) {
   .play-hub-grid {
-    gap: 10px;
+    gap: 8px;
+    margin-top: 14px;
   }
 
   .play-hub-card {
-    min-height: 100px;
-    padding: 14px 12px;
+    min-height: 0;
+    padding: 12px 10px;
+    gap: 2px;
+    border-radius: 12px;
+  }
+
+  .play-hub-icon {
+    font-size: 18px;
+  }
+
+  .play-hub-title {
+    font-size: 14px;
+  }
+
+  .play-hub-sub {
+    font-size: 11px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .play-hub-tip {
+    margin-top: 12px;
+    padding: 10px 12px;
   }
 }
 </style>

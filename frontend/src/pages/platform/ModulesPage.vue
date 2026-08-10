@@ -621,7 +621,17 @@ onMounted(async () => {
 
   .mp-grid,
   .recommend-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mp-hero-art {
+    display: none;
+  }
+
+  .mp-card {
+    min-height: 0;
+    padding: 12px;
   }
 }
 </style>

@@ -117,6 +117,7 @@ public class UnifiedProfileService {
         result.put("nickname", merged.getOrDefault("nickname", ""));
         result.put("phone", user.getPhoneNumber());
         result.put("phoneNumber", user.getPhoneNumber());
+        result.put("email", user.getEmail() != null ? user.getEmail() : "");
         result.put("gender", toChineseGender((String) merged.get("gender")));
         result.put("location", merged.getOrDefault("location", ""));
         result.put("occupation", merged.getOrDefault("occupation", ""));

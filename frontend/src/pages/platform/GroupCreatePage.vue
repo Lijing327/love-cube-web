@@ -1,5 +1,5 @@
 <template>
-  <section class="create-page">
+  <section class="create-page" :class="{ 'has-tab-clearance': needsTabClearance }">
     <header class="page-head">
       <router-link class="back-link" :to="groupsPath()">← 返回团体大厅</router-link>
       <h1>创建团体</h1>
@@ -24,9 +24,9 @@
           type="text"
           required
           maxlength="64"
-          placeholder="如：李四（仅在成员名册与团体互动中展示，非全站昵称）"
+          placeholder="如：李四"
         >
-        <p class="hint">创建后只有你加入的各个团体名册及相关互动中会使用此称呼，不会在平台公开主页外泄露。</p>
+        <p class="hint">仅在成员名册与团体互动中展示，不是全站昵称；不会在平台公开主页外泄露。</p>
       </label>
 
       <label class="field">
@@ -75,17 +75,20 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { createPlatGroup, spaceManagePath } from '@/api/groups.js'
 import { uploadImage } from '@/api/upload.js'
 import { usePlatformPath } from '@/composables/usePlatformPath.js'
 import { useUserStore } from '@/stores/user.js'
 import { PLATFORM_GROUP_CATEGORY_OPTIONS } from '@/utils/groupCategories.js'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const { groupsPath } = usePlatformPath()
+/** 平台壳有固定底栏；/m、/pc 壳没有，避免操作条悬空过高 */
+const needsTabClearance = computed(() => !route.path.startsWith('/m/') && !route.path.startsWith('/pc/'))
 
 const form = reactive({
   name: '',
@@ -167,8 +170,9 @@ async function submit() {
 
 <style scoped>
 .create-page {
-  width: min(100%, 640px);
-  margin: var(--lc-space-4) auto 0;
+  box-sizing: border-box;
+  width: min(100% - 24px, 640px);
+  margin: var(--lc-space-4) auto calc(var(--lc-space-8) + 24px);
   padding: var(--lc-space-8);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius);
@@ -205,6 +209,7 @@ async function submit() {
 .field {
   display: grid;
   gap: var(--lc-space-2);
+  min-width: 0;
 }
 
 .label-text {
@@ -221,6 +226,9 @@ input[type='text'],
 input:not([type]),
 select,
 textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-xs);
   padding: var(--lc-space-3);
@@ -236,6 +244,7 @@ textarea {
 }
 
 .file-input {
+  max-width: 100%;
   font-size: var(--lc-text-sm);
 }
 
@@ -244,6 +253,8 @@ textarea {
   color: var(--lc-muted);
   font-size: var(--lc-text-sm);
   font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .preview-row {
@@ -321,5 +332,64 @@ textarea {
   border: 1px solid var(--lc-border);
   color: var(--lc-blue);
   background: var(--lc-surface);
+}
+
+/* 移动端：为底部快捷导航预留空间，避免提交按钮被遮挡 */
+@media (max-width: 900px) {
+  .create-page {
+    width: 100%;
+    margin: 0 auto;
+    padding: 12px 14px calc(100px + env(safe-area-inset-bottom, 0px));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .page-head h1 {
+    font-size: 22px;
+  }
+
+  .page-head p {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .create-form {
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  input[type='text'],
+  input:not([type]),
+  select,
+  textarea {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .join-field {
+    display: grid;
+    gap: 10px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  textarea {
+    min-height: 88px;
+  }
+
+  .page-head .back-link {
+    display: none;
+  }
 }
 </style>

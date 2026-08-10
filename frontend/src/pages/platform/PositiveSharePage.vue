@@ -1635,37 +1635,84 @@ onMounted(() => {
 @media (max-width: 767px) {
   .hero {
     grid-template-columns: 1fr;
-    min-height: auto;
+    min-height: 0;
   }
 
   .hero-art {
-    height: 100px;
-  }
-
-  .hero-content {
-    padding: 24px 20px 20px;
-  }
-
-  .stats-band {
     display: none;
   }
 
-  .stat-card {
-    padding: 10px 8px;
-    gap: 8px;
+  .hero-content {
+    padding: 14px 14px 12px;
+  }
+
+  .hero-title {
+    font-size: 22px;
+  }
+
+  .hero-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hero-topic {
+    margin-top: 8px;
+    padding: 10px 12px;
+  }
+
+  .hero-topic-text {
+    font-size: 13px;
+    -webkit-line-clamp: 2;
+  }
+
+  .hero-btn {
+    margin-top: 10px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .stats-band {
+    display: flex;
+    gap: 0;
+    padding: 8px 4px;
+    border: 1px solid #f0ebe5;
     border-radius: 12px;
-    align-items: flex-start;
+    background: var(--lc-surface);
+  }
+
+  .stat-card {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 6px;
+    gap: 6px;
+    border: 0;
+    border-radius: 0;
+    align-items: center;
+    background: transparent;
+  }
+
+  .stat-card:not(:first-child) {
+    border-left: 1px solid #f0ebe5;
   }
 
   .stat-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 14px;
   }
 
   .stat-num {
-    font-size: 22px;
+    font-size: 16px;
+  }
+
+  .stat-trend {
+    display: none;
   }
 
   .stat-unit,

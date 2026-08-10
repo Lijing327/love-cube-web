@@ -159,8 +159,8 @@ onMounted(async () => {
 <style scoped>
 .help-m {
   min-height: 100vh;
-  padding: 16px 14px 28px;
-  background: linear-gradient(180deg, #eff6ff 0%, #f4f5fb 100px, #f4f5fb 100%);
+  padding: 12px 14px 28px;
+  background: linear-gradient(180deg, #eff6ff 0%, #f4f5fb 80px, #f4f5fb 100%);
 }
 
 .help-m-back {
@@ -174,13 +174,13 @@ onMounted(async () => {
 }
 
 .help-m-head h1 {
-  margin: 8px 0 0;
-  font-size: 22px;
+  margin: 4px 0 0;
+  font-size: 20px;
   font-weight: 800;
 }
 
 .help-m-head p {
-  margin: 4px 0 10px;
+  margin: 2px 0 8px;
   font-size: 12px;
   color: var(--lc-subtle, #6b7280);
 }

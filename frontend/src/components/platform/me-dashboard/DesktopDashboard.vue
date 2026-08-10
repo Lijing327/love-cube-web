@@ -672,4 +672,17 @@ function scrollToTasks() {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 767px) {
+  .hero-metrics,
+  .today-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hero-metrics .metric-card p,
+  .today-grid .metric-card p {
+    display: none;
+  }
+}
 </style>

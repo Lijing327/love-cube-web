@@ -118,7 +118,7 @@ onMounted(load)
 <style scoped>
 .local-m {
   min-height: 100vh;
-  padding: 12px 14px 24px;
+  padding: 10px 14px calc(88px + env(safe-area-inset-bottom, 0px));
   background: #f4f5fb;
 }
 
@@ -126,7 +126,7 @@ onMounted(load)
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .back {
@@ -156,10 +156,10 @@ onMounted(load)
 
 .filter-scroll {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 12px;
+  padding-bottom: 2px;
+  margin-bottom: 8px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -168,7 +168,7 @@ onMounted(load)
   border: 1px solid #e2e8f0;
   background: #fff;
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   font-size: 12px;
   color: #475569;
 }
@@ -182,9 +182,9 @@ onMounted(load)
 
 .card {
   background: #fff;
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
   border: 1px solid #e8ecf4;
 }
 
@@ -213,24 +213,24 @@ onMounted(load)
 }
 
 .meta {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   font-size: 11px;
   color: #94a3b8;
 }
 
 .summary {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   font-size: 13px;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .actions {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .btn {
@@ -239,8 +239,8 @@ onMounted(load)
   justify-content: center;
   border: none;
   border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }

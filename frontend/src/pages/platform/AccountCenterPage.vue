@@ -1649,6 +1649,21 @@ onBeforeUnmount(() => {
     height: 80px;
     font-size: 22px;
   }
+
+  .workspace-item,
+  .quick-item {
+    min-height: 0;
+    padding: 12px 10px;
+    gap: 6px;
+  }
+
+  .workspace-item {
+    min-height: 88px;
+  }
+
+  .quick-item {
+    min-height: 72px;
+  }
 }
 
 @media (min-width: 768px) {

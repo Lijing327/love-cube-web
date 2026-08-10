@@ -170,8 +170,7 @@
 
       <section class="m-quick-grid" aria-label="快捷入口">
         <router-link class="m-quick-item" :to="myGroupsPath()">我的团体</router-link>
-        <button type="button" class="m-quick-item" @click="goCreate">创建团体</button>
-        <router-link class="m-quick-item" :to="myGroupsPath()">加入审核</router-link>
+        <router-link class="m-quick-item" :to="groupsPath('season')">赛季榜</router-link>
         <router-link class="m-quick-item" :to="myGroupsPath()">团体管理</router-link>
       </section>
 
@@ -1154,21 +1153,25 @@ onMounted(() => {
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
-    margin: 12px 0 10px;
+    margin: 8px 0 6px;
   }
 
   .m-hero h1 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.25;
     color: var(--lc-text);
   }
 
   .m-hero p {
-    margin: 4px 0 0;
-    font-size: 13px;
+    margin: 2px 0 0;
+    font-size: 12px;
     color: var(--lc-muted);
-    line-height: 1.4;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .m-create {
@@ -1210,55 +1213,55 @@ onMounted(() => {
   }
 
   .m-quick-grid {
-    margin-top: 12px;
+    margin-top: 8px;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .m-quick-item {
-    height: 42px;
+    height: 34px;
     border: 1px solid var(--lc-border);
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--lc-surface);
     display: grid;
     place-items: center;
     color: var(--lc-text);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     padding: 0;
   }
 
   .m-list-wrap {
-    margin-top: 12px;
+    margin-top: 10px;
   }
 
   .m-group-list {
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }
 
   .m-group-card {
     border: 1px solid var(--lc-border);
     background: var(--lc-surface);
-    border-radius: 16px;
-    padding: 10px;
+    border-radius: 12px;
+    padding: 8px;
     display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
   }
 
   .m-cover {
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     display: block;
-    height: 88px;
+    height: 64px;
   }
 
   .m-cover img {
-    width: 88px;
-    height: 88px;
+    width: 64px;
+    height: 64px;
     object-fit: cover;
   }
 
@@ -1297,9 +1300,15 @@ onMounted(() => {
   .m-desc {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     overflow: hidden;
-    line-height: 1.45;
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  .m-meta {
+    margin-top: 4px;
+    font-size: 12px;
   }
 
   .m-statuses,
@@ -1324,14 +1333,20 @@ onMounted(() => {
   }
 
   .m-member-display {
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 12px;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
     border: 1px dashed rgba(79, 99, 246, 0.35);
     background: rgba(79, 99, 246, 0.06);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 6px;
+  }
+
+  .m-member-display-hint {
+    display: none;
   }
 
   .m-member-display-hint {

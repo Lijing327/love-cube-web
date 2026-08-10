@@ -689,5 +689,14 @@ onMounted(loadAll)
 @media (max-width: 640px) {
   .card-head { flex-direction: column; }
   .todo-card { grid-template-columns: 1fr; }
+
+  .activity-hero .hero-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .activity-hero .hero-metrics .metric-card p {
+    display: none;
+  }
 }
 </style>

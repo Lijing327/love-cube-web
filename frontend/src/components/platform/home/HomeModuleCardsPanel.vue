@@ -150,8 +150,33 @@ defineProps({
 
 @media (max-width: 520px) {
   .people-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .person-card {
+    min-height: 0;
+    padding: 10px 8px;
+    gap: 4px;
+  }
+
+  .person-photo {
+    width: 64px;
+    height: 72px;
+  }
+
+  .person-photo span {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .person-card p {
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 </style>

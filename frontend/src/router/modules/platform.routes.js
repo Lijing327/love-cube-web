@@ -41,6 +41,7 @@ export default {
     { path: 'me/privacy', component: () => import('@/pages/platform/MyPrivacyPage.vue'), meta: { module: 'platform', requiresAuth: true } },
     { path: 'me/notifications', component: () => import('@/pages/platform/MyNotificationsPage.vue'), meta: { module: 'platform', requiresAuth: true } },
     { path: 'me/notification-settings', component: () => import('@/pages/platform/MyNotificationChannelSettingsPage.vue'), meta: { module: 'platform', requiresAuth: true } },
+    { path: 'platform/wechat-helper', component: () => import('@/pages/platform/WechatHelperPage.vue'), meta: { module: 'platform', requiresAuth: true } },
     { path: 'me/groups', redirect: '/platform/me/groups', meta: { module: 'platform' } },
     { path: 'account', redirect: '/me', meta: { module: 'platform' } },
     { path: 'messages', component: () => import('@/pages/platform/MessagesCenterPage.vue'), meta: { module: 'platform', requiresAuth: true } },

@@ -1721,10 +1721,6 @@ onMounted(() => {
     line-height: 1.2;
   }
 
-  .stat-trend {
-    display: none;
-  }
-
   .side-panel {
     grid-template-columns: 1fr;
   }

@@ -1347,9 +1347,6 @@ onMounted(() => {
 
   .m-member-display-hint {
     display: none;
-  }
-
-  .m-member-display-hint {
     margin: 0;
     font-size: 11px;
     font-weight: 700;

@@ -255,11 +255,11 @@ async function load() {
     joined.value = (raw?.joinedGroups ?? []).map((g) => normalize(g, 'joined'))
     pending.value = (raw?.pendingJoinGroups ?? []).map((g) => normalize(g, 'pending'))
 
-    const noOther =
-      created.value.length === 0 && managed.value.length === 0 && joined.value.length === 0
-    if (noOther && pending.value.length > 0) {
-      tab.value = 'pending'
-    }
+    if (created.value.length) tab.value = 'created'
+    else if (joined.value.length) tab.value = 'joined'
+    else if (managed.value.length) tab.value = 'managed'
+    else if (pending.value.length) tab.value = 'pending'
+    else tab.value = 'joined'
   } catch (err) {
     error.value = err.message || '无法加载我的团体'
     created.value = []

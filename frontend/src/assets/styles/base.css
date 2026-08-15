@@ -15,6 +15,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@media (display-mode: standalone) {
+  html,
+  body {
+    background-color: #ffffff;
+  }
+}
+
 #app {
   height: 100%;
   position: relative;

@@ -21,39 +21,49 @@
       </div>
     </header>
 
-    <section class="filter-panel section-card" aria-label="内容筛选">
-      <div class="section-card-head">
+    <section class="filter-panel section-card" :class="{ 'is-open': filterOpen }" aria-label="内容筛选">
+      <div class="filter-toolbar">
+        <button type="button" class="filter-toggle" :aria-expanded="filterOpen" @click="filterOpen = !filterOpen">
+          <strong>筛选</strong>
+          <span class="filter-toggle-meta">{{ filterSummaryText }}</span>
+          <span class="filter-toggle-icon">{{ filterOpen ? '收起' : '展开' }}</span>
+        </button>
+        <button type="button" class="filter-reset" @click="resetFilters">重置</button>
+      </div>
+      <div class="section-card-head filter-head-desktop">
         <h3>筛选内容</h3>
         <button type="button" class="platform-btn platform-btn-ghost" @click="resetFilters">重置</button>
       </div>
-      <div class="filter-grid">
-        <label class="search">
-          <span>搜索</span>
-          <input v-model.trim="keyword" placeholder="搜索标题、摘要、作者">
-        </label>
-        <label>
-          <span>分类</span>
-          <select v-model="activeCategory">
-            <option value="all">全部分类</option>
-            <option v-for="item in categoryOptions" :key="item" :value="item">{{ item }}</option>
-          </select>
-        </label>
-        <label>
-          <span>时间</span>
-          <select v-model="activeTime">
-            <option value="all">全部时间</option>
-            <option value="week">本周</option>
-            <option value="month">本月</option>
-          </select>
-        </label>
-      </div>
-      <div class="tab-row">
-        <span>内容类型</span>
-        <ContentTabs v-model="activeType" :tabs="contentTypes" />
-      </div>
-      <div class="tab-row">
-        <span>排序</span>
-        <ContentFilterBar v-model="activeSort" :sorts="PLATFORM_SORTS" />
+      <div class="filter-body">
+        <div class="filter-grid">
+          <label class="search">
+            <span>搜索</span>
+            <input v-model.trim="keyword" placeholder="搜索标题、摘要、作者">
+          </label>
+          <label>
+            <span>分类</span>
+            <select v-model="activeCategory">
+              <option value="all">全部分类</option>
+              <option v-for="item in categoryOptions" :key="item" :value="item">{{ item }}</option>
+            </select>
+          </label>
+          <label>
+            <span>时间</span>
+            <select v-model="activeTime">
+              <option value="all">全部时间</option>
+              <option value="week">本周</option>
+              <option value="month">本月</option>
+            </select>
+          </label>
+        </div>
+        <div class="tab-row">
+          <span>内容类型</span>
+          <ContentTabs v-model="activeType" :tabs="contentTypes" />
+        </div>
+        <div class="tab-row">
+          <span>排序</span>
+          <ContentFilterBar v-model="activeSort" :sorts="PLATFORM_SORTS" />
+        </div>
       </div>
     </section>
 
@@ -151,6 +161,7 @@ import { userAvatarUrlFromApi } from '@/utils/displayFields.js'
 const route = useRoute()
 const router = useRouter()
 const keyword = ref('')
+const filterOpen = ref(false)
 const activeType = ref('local')
 const activeSort = ref('latest')
 const activeCategory = ref('all')
@@ -218,7 +229,10 @@ const recommendedItems = computed(() => {
 
 const latestUpdatedLabel = computed(() => {
   const latest = [...contentList.value].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0]
-  return latest?.createdAt || '--'
+  const raw = String(latest?.createdAt || '').trim()
+  const matched = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (matched) return `${matched[2]}-${matched[3]}`
+  return raw || '--'
 })
 
 const hubMetrics = computed(() => [
@@ -231,6 +245,16 @@ const hubMetrics = computed(() => [
 const activeTypeLabel = computed(() => `类型：${contentTypes.find(item => item.key === activeType.value)?.label || '全部'}`)
 const activeSortLabel = computed(() => `排序：${PLATFORM_SORTS.find(item => item.key === activeSort.value)?.label || '最新'}`)
 const activeTimeLabel = computed(() => `时间：${timeFilters.find(item => item.key === activeTime.value)?.label || '全部时间'}`)
+const filterSummaryText = computed(() => {
+  const parts = [
+    contentTypes.find(item => item.key === activeType.value)?.label,
+    PLATFORM_SORTS.find(item => item.key === activeSort.value)?.label,
+    timeFilters.find(item => item.key === activeTime.value)?.label
+  ]
+  if (activeCategory.value !== 'all') parts.push(activeCategory.value)
+  if (keyword.value) parts.push(keyword.value)
+  return parts.filter(Boolean).join(' · ')
+})
 
 function goPublish(){ router.push('/platform/positive-share') }
 
@@ -539,8 +563,12 @@ onMounted(async () => {
 .hero-copy h1 {
   margin: 0;
   color: var(--lc-text);
-  font-size: 30px;
-  line-height: 1.15;
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.section-card-head h3 {
+  font-size: var(--lc-text-lg);
 }
 
 .hero-copy p:not(.section-kicker) {
@@ -562,12 +590,21 @@ onMounted(async () => {
   margin-top: var(--lc-space-4);
 }
 
-.hero-metrics {
+.metric-grid.hero-metrics {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 0;
 }
 
+.filter-toolbar {
+  display: none;
+}
+
 .filter-panel {
+  display: grid;
+  gap: var(--lc-space-4);
+}
+
+.filter-body {
   display: grid;
   gap: var(--lc-space-4);
 }
@@ -695,24 +732,26 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
-  .hero-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .metric-grid.hero-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 767px) {
   .content-hub {
-    width: min(100% - 20px, 480px);
+    width: min(100% - 20px, 720px);
     margin-top: var(--lc-space-3);
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
   }
 
   .hub-hero {
-    padding: 14px;
-    gap: 12px;
+    padding: 12px;
+    gap: 10px;
   }
 
   .hero-copy h1 {
-    font-size: 22px;
+    font-size: var(--lc-text-lg);
   }
 
   .hero-copy p:not(.section-kicker) {
@@ -725,12 +764,121 @@ onMounted(async () => {
     overflow: hidden;
   }
 
-  .filter-summary {
-    margin-top: 10px;
+  .filter-summary,
+  .filter-head-desktop {
+    display: none;
   }
 
-  /* 四项指标压成单行条，避免 2x2 仍占首屏 */
-  .hero-metrics {
+  .section-card-head h3,
+  .operation-section-head h2 {
+    font-size: var(--lc-text-md);
+  }
+
+  .filter-panel {
+    gap: 0;
+    padding: 6px 10px;
+  }
+
+  .filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--lc-text);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .filter-toggle strong {
+    flex: 0 0 auto;
+    font-size: 14px;
+  }
+
+  .filter-toggle-meta {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--lc-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .filter-toggle-icon {
+    flex: 0 0 auto;
+    color: var(--lc-blue);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .filter-reset {
+    height: 32px;
+    padding: 0 8px;
+    border: 0;
+    background: transparent;
+    color: var(--lc-blue);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .filter-body {
+    display: none;
+  }
+
+  .filter-panel.is-open {
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+
+  .filter-panel.is-open .filter-body {
+    display: grid;
+    gap: 10px;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .filter-grid .search {
+    grid-column: 1 / -1;
+  }
+
+  .filter-grid label {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .filter-grid input,
+  .filter-grid select {
+    height: 36px;
+  }
+
+  .tab-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .tab-row > span {
+    display: none;
+  }
+
+  /* 四项指标压成单行条，避免大数字把首屏撑满 */
+  .metric-grid.hero-metrics {
     display: flex;
     flex-wrap: nowrap;
     gap: 0;
@@ -741,7 +889,7 @@ onMounted(async () => {
     background: var(--lc-surface);
   }
 
-  .hero-metrics .metric-card {
+  .metric-grid.hero-metrics .metric-card {
     flex: 1 1 0;
     min-width: 0;
     min-height: 0;
@@ -756,28 +904,87 @@ onMounted(async () => {
     justify-items: center;
   }
 
-  .hero-metrics .metric-card:not(:first-child) {
+  .metric-grid.hero-metrics .metric-card:not(:first-child) {
     border-left: 1px solid var(--lc-border);
   }
 
-  .hero-metrics .metric-card strong {
+  .metric-grid.hero-metrics .metric-card strong {
     font-size: 15px;
+    white-space: nowrap;
   }
 
-  .hero-metrics .metric-label {
+  .metric-grid.hero-metrics .metric-label {
     font-size: 10px;
   }
 
-  .hero-metrics .metric-card p {
+  .metric-grid.hero-metrics .metric-card p {
     display: none;
   }
 
-  .tab-row {
-    display: grid;
+  .content-hub {
+    gap: 8px;
+    margin-top: 8px;
   }
 
-  .tab-row > span {
-    flex-basis: auto;
+  .recommend-section,
+  .list-section,
+  .dashboard-section {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .recommend-section .section-kicker,
+  .list-section .section-kicker {
+    display: none;
+  }
+
+  .recommend-section .operation-section-head,
+  .list-section .operation-section-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  .recommend-section .operation-section-head h2,
+  .list-section .operation-section-head h2 {
+    font-size: 15px;
+  }
+
+  .recommend-section .platform-btn {
+    width: auto;
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .recommend-grid {
+    gap: 8px;
+  }
+
+  .recommend-card {
+    gap: 4px;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .recommend-card h3 {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .recommend-card p {
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .recommend-meta {
+    gap: 8px;
+    font-size: 11px;
   }
 }
 </style>

@@ -103,7 +103,7 @@
       <router-link to="/platform" :class="{ 'is-active': isMobilePlatformHomeActive() }">首页</router-link>
       <router-link to="/platform/local" :class="{ 'is-active': isActive('/platform/local') }">本地</router-link>
       <router-link to="/platform/positive-share" class="mobile-publish-entry" :class="{ 'is-active': isActive('/platform/positive-share') }">发布</router-link>
-      <router-link to="/platform/groups" :class="{ 'is-active': isActive('/platform/groups') }">团体</router-link>
+      <router-link :to="groupsTabTo" :class="{ 'is-active': isGroupsTabActive() }">团体</router-link>
       <router-link to="/me" :class="{ 'is-active': isActive('/me') || isActive('/platform/me') }">我的</router-link>
     </nav>
 
@@ -277,9 +277,23 @@ watch(() => route.fullPath, () => {
   userStore.syncCurrentUser()
 })
 
+const groupsTabTo = computed(() => (
+  userStore.isLoggedIn ? '/platform/me/groups' : '/platform/groups'
+))
+
 function isActive(basePath) {
   if (basePath === '/') return route.path === '/'
   return route.path === basePath || route.path.startsWith(`${basePath}/`)
+}
+
+function isGroupsTabActive() {
+  const p = route.path
+  return (
+    p === '/me/groups' ||
+    p === '/platform/me/groups' ||
+    p === '/platform/groups' ||
+    p.startsWith('/platform/groups/')
+  )
 }
 
 /** 底部「首页」仅高亮真正的平台首页，避免 /platform/local 等子路径误匹配 isActive('/platform') */
@@ -549,8 +563,10 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+  padding-top: env(safe-area-inset-top, 0px);
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
   transition: box-shadow 0.22s ease;
 }
@@ -1519,7 +1535,10 @@ onBeforeUnmount(() => {
 @media (max-width: 767px) {
   .platform-header {
     top: 0;
-    padding: 0;
+    padding: env(safe-area-inset-top, 0px) 0 0;
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .nav-wrap {
@@ -1530,7 +1549,7 @@ onBeforeUnmount(() => {
     width: 100%;
     border-radius: 0;
     background: #ffffff;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    box-shadow: none;
   }
 
   .brand-logo {

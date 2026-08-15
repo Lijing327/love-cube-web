@@ -841,6 +841,11 @@
     flex-direction: column;
   }
 
+  .section-card-head h3,
+  .operation-section-head h2 {
+    font-size: 16px;
+  }
+
   /* 移动端指标：横向紧凑条，避免少量数字纵向占满首屏 */
   .metric-grid,
   .metric-grid.compact {
@@ -888,7 +893,10 @@
   }
 
   .metric-card strong {
-    font-size: 20px;
+    font-size: 16px;
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .metric-card p {

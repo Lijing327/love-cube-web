@@ -1,7 +1,7 @@
 <template>
   <div class="local-m">
     <header class="local-m-head">
-      <button type="button" class="back" aria-label="返回" @click="goBack()">‹</button>
+      <button v-if="showBack" type="button" class="back" aria-label="返回" @click="goBack()">‹</button>
       <div>
         <h1>本地服务</h1>
         <p>招聘 · 二手 · 租房 · 同城资源</p>
@@ -28,13 +28,13 @@
         <h3>{{ item.title }}</h3>
         <span class="tag">{{ typeLabel(item.type) }}</span>
       </div>
-      <p class="meta">{{ item.location || '地点待定' }} · 热度 {{ item.heat || 0 }}</p>
-      <p class="summary">{{ item.summary || '暂无简介' }}</p>
-      <div class="actions">
+      <div class="card-mid">
+        <p class="meta">{{ item.location || '地点待定' }} · 热度 {{ item.heat || 0 }}</p>
         <button type="button" class="btn primary" :disabled="isInterested(item.id)" @click="interest(item)">
           {{ isInterested(item.id) ? '已感兴趣' : '感兴趣' }}
         </button>
       </div>
+      <p class="summary">{{ item.summary || '暂无简介' }}</p>
     </article>
 
     <div v-if="!loading && !filteredItems.length" class="empty">
@@ -46,11 +46,14 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { getLocalResources, markLocalResourceInterest } from '@/api/localResources.js'
 import { useBackNavigation } from '@/composables/useBackNavigation.js'
 
+const route = useRoute()
 const { goBack } = useBackNavigation('/m/platform')
+const showBack = computed(() => route.path.startsWith('/m/'))
 const loading = ref(false)
 const activeType = ref('all')
 const items = ref([])
@@ -118,15 +121,15 @@ onMounted(load)
 <style scoped>
 .local-m {
   min-height: 100vh;
-  padding: 10px 14px calc(88px + env(safe-area-inset-bottom, 0px));
-  background: #f4f5fb;
+  padding: 8px 10px calc(80px + env(safe-area-inset-bottom, 0px));
+  background: var(--lc-bg);
 }
 
 .local-m-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .back {
@@ -144,14 +147,15 @@ onMounted(load)
 
 .local-m-head h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
+  color: var(--lc-text);
 }
 
 .local-m-head p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #64748b;
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--lc-subtle);
 }
 
 .filter-scroll {
@@ -159,7 +163,7 @@ onMounted(load)
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -181,11 +185,11 @@ onMounted(load)
 }
 
 .card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border: 1px solid #e8ecf4;
+  background: var(--lc-surface);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--lc-border);
 }
 
 .card-top {
@@ -197,9 +201,10 @@ onMounted(load)
 
 .card-top h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--lc-text);
+  line-height: 1.3;
 }
 
 .tag {
@@ -212,16 +217,25 @@ onMounted(load)
   font-weight: 700;
 }
 
+.card-mid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .meta {
-  margin: 4px 0 0;
+  margin: 0;
+  min-width: 0;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--lc-subtle);
 }
 
 .summary {
   margin: 4px 0 0;
-  font-size: 13px;
-  color: #64748b;
+  font-size: 12px;
+  color: var(--lc-muted);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -229,25 +243,23 @@ onMounted(load)
   overflow: hidden;
 }
 
-.actions {
-  margin-top: 8px;
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   border: none;
   border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: #fff;
+  background: var(--lc-blue);
+  color: var(--lc-surface);
 }
 
 .btn:disabled {

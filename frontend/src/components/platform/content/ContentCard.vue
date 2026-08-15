@@ -93,9 +93,14 @@ h4{margin:0;color:var(--lc-text);font-size:var(--lc-text-lg);line-height:1.35}
 .meta-avatar{object-fit:cover}
 .meta-avatar-fallback{background:var(--lc-border);color:var(--lc-muted);font-size:11px}
 .actions{justify-content:flex-end;margin-top:var(--lc-space-1)}
-@media (max-width: 520px){
-  .content-card{grid-template-columns:1fr}
-  .cover{width:100%;height:150px}
-  .actions{justify-content:flex-start}
+@media (max-width: 767px){
+  .content-card{grid-template-columns:72px minmax(0,1fr);gap:8px;padding:10px;border-radius:10px}
+  .content-card.no-cover{grid-template-columns:1fr}
+  .cover{width:72px;height:72px}
+  .body{gap:4px}
+  h4{font-size:15px;line-height:1.3}
+  .summary{font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .actions{justify-content:flex-start;gap:6px}
+  .actions .platform-btn{width:auto;height:28px;padding:0 8px;font-size:12px}
 }
 </style>

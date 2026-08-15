@@ -21,4 +21,7 @@ defineEmits(['like', 'comment', 'view', 'share'])
 
 <style scoped>
 .list{display:grid;gap:var(--lc-space-3)}
+@media (max-width: 767px){
+  .list{gap:8px}
+}
 </style>

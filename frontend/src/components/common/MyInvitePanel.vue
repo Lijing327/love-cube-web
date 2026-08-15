@@ -1,13 +1,13 @@
 <template>
-  <section class="my-invite-panel" aria-label="我的邀请">
+  <section class="my-invite-panel" :class="{ compact }" aria-label="我的邀请">
     <div class="invite-main">
       <div class="invite-copy">
         <p class="eyebrow">我的邀请</p>
         <h2>{{ inviteCode || '加载中...' }}</h2>
         <p class="count">已邀请 {{ inviteCount }} 人</p>
       </div>
-      <div class="qr-wrap">
-        <InviteQrCode :invite-code="inviteCode" :size="196" />
+      <div class="qr-wrap" @click.stop="openQrPreview">
+        <InviteQrCode ref="qrRef" :invite-code="inviteCode" :size="196" />
       </div>
     </div>
 
@@ -31,12 +31,18 @@ import { createInviteUrl } from '@/utils/inviteUrl.js'
 
 const props = defineProps({
   inviteCode: { type: String, default: '' },
-  inviteCount: { type: Number, default: 0 }
+  inviteCount: { type: Number, default: 0 },
+  compact: { type: Boolean, default: false }
 })
 
 const resolvedInviteLink = computed(() => createInviteUrl(props.inviteCode))
 const feedback = ref('')
 const feedbackError = ref(false)
+const qrRef = ref(null)
+
+function openQrPreview() {
+  qrRef.value?.openPreview?.()
+}
 
 async function copyLink() {
   if (!resolvedInviteLink.value) return
@@ -127,6 +133,7 @@ h2 {
 
 .qr-wrap {
   width: 148px;
+  cursor: pointer;
 }
 
 .link-row {
@@ -187,22 +194,64 @@ h2 {
   color: var(--lc-red);
 }
 
-@media (max-width: 420px) {
+@media (max-width: 767px) {
   .my-invite-panel {
-    padding: 16px;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--lc-border);
+    background: var(--lc-surface);
+    box-shadow: none;
   }
 
   .invite-main {
-    grid-template-columns: minmax(0, 1fr) 124px;
-    gap: 14px;
+    grid-template-columns: minmax(0, 1fr) 72px;
+    gap: 8px;
   }
 
   h2 {
-    font-size: 24px;
+    margin: 4px 0 2px;
+    font-size: 15px;
+    font-weight: 800;
   }
 
   .qr-wrap {
-    width: 124px;
+    width: 72px;
+  }
+
+  .qr-wrap :deep(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .link-row input {
+    height: 34px;
+    padding: 0 10px;
+  }
+
+  .actions button {
+    width: 100%;
+    height: 34px;
+    padding: 0;
+    box-shadow: none;
+    background: var(--lc-blue);
+  }
+
+  .my-invite-panel.compact {
+    gap: 0;
+  }
+
+  .my-invite-panel.compact .link-row {
+    display: none;
+  }
+
+  .my-invite-panel.compact .actions {
+    margin-top: 8px;
+  }
+
+  .my-invite-panel.compact .actions button {
+    height: 32px;
+    font-size: 12px;
   }
 }
 </style>

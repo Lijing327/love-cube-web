@@ -15,13 +15,13 @@
               <span class="mh-verify-tag" :class="{ 'is-verified': user?.verificationStatus === 'approved' }">{{ verifyLabel }}</span>
               <span class="mh-role-tag">{{ roleLabel }}</span>
             </div>
-          </div>
-          <div class="mh-hero-actions">
-            <router-link class="mh-message-btn" to="/me/notifications">
-              消息
-              <em v-if="unreadCount > 0" class="mh-message-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</em>
-            </router-link>
-            <button type="button" class="mh-edit-btn" @click="openEditPanel">编辑资料</button>
+            <div class="mh-hero-actions">
+              <router-link class="mh-message-btn" to="/me/notifications">
+                消息
+                <em v-if="unreadCount > 0" class="mh-message-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</em>
+              </router-link>
+              <button type="button" class="mh-edit-btn" @click="openEditPanel">编辑资料</button>
+            </div>
           </div>
         </div>
         <MhHeroBadgeLink :badges="badges" />
@@ -55,26 +55,25 @@
             <small>{{ item.label }}</small>
           </router-link>
         </div>
+        <div class="mh-growth-slim">
+          <div class="mh-grow-line1">
+            <span class="mh-grow-title">{{ mobileGrowthLevel.name }}</span>
+            <span class="mh-grow-nums">
+              {{ mobileGrowthLevel.currentExp }}/{{ mobileGrowthLevel.nextExp }}
+              · 还差 {{ Math.max(0, mobileGrowthLevel.nextExp - mobileGrowthLevel.currentExp) }}
+            </span>
+          </div>
+          <div class="mh-exp-bar mh-exp-bar--slim" role="progressbar" :aria-valuenow="mobileGrowthLevel.currentExp" :aria-valuemin="0" :aria-valuemax="mobileGrowthLevel.nextExp">
+            <div class="mh-exp-fill" :style="{ width: mobileGrowthProgress }"></div>
+          </div>
+        </div>
       </div>
 
       <WechatNotifyEntryBanner />
 
-      <!-- 成长信息（紧凑：称号 + 数值一行，细进度条一行；任务/徽章见任务中心与上方入口） -->
-      <div class="mh-card mh-growth-slim">
-        <div class="mh-grow-line1">
-          <span class="mh-grow-title">{{ mobileGrowthLevel.name }}</span>
-          <span class="mh-grow-nums">
-            {{ mobileGrowthLevel.currentExp }}/{{ mobileGrowthLevel.nextExp }}
-            <span class="mh-grow-sep" aria-hidden="true">·</span>
-            还差 {{ Math.max(0, mobileGrowthLevel.nextExp - mobileGrowthLevel.currentExp) }} 经验
-          </span>
-        </div>
-        <div class="mh-exp-bar mh-exp-bar--slim" role="progressbar" :aria-valuenow="mobileGrowthLevel.currentExp" :aria-valuemin="0" :aria-valuemax="mobileGrowthLevel.nextExp">
-          <div class="mh-exp-fill" :style="{ width: mobileGrowthProgress }"></div>
-        </div>
-      </div>
-
       <MyInvitePanel
+        class="mh-invite"
+        compact
         :invite-code="inviteCodeDisplay"
         :invite-count="inviteCount"
       />
@@ -1924,14 +1923,13 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 767px) {
-  :global(.platform-header),
   :global(.platform-footer),
   :global(.co-creation-toolbar) {
     display: none !important;
   }
 
   .me-shell {
-    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-top: 12px;
   }
 
   .growth-body {
@@ -2201,23 +2199,39 @@ onBeforeUnmount(() => {
    ═══════════════════════════════════════════════════════════ */
 
 .me-mobile {
-  padding: calc(18px + env(safe-area-inset-top)) 14px calc(84px + env(safe-area-inset-bottom));
+  padding: 8px 10px calc(80px + env(safe-area-inset-bottom));
   background: var(--lc-bg);
   min-height: 100vh;
 }
 
+.me-mobile :deep(.wh-entry-banner) {
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border-color: var(--lc-border);
+  background: var(--lc-surface);
+  box-shadow: none;
+  gap: 8px;
+}
+
+.me-mobile :deep(.wh-entry-sub) {
+  display: none;
+}
+
 /* ── Hero card ─────────────────────────────────────────── */
 .mh-hero {
-  border-radius: 20px;
-  background: linear-gradient(135deg, var(--lc-violet) 0%, var(--lc-indigo) 55%, var(--lc-indigo) 100%);
-  padding: 20px 18px 16px;
-  margin-bottom: 14px;
+  border-radius: 10px;
+  background: var(--lc-surface);
+  border: 1px solid var(--lc-border);
+  box-shadow: none;
+  padding: 10px;
+  margin-bottom: 6px;
 }
 
 .mh-hero-inner {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 10px;
 }
 
 .mh-avatar-wrap {
@@ -2227,19 +2241,19 @@ onBeforeUnmount(() => {
 
 .mh-avatar {
   display: block;
-  width: 66px;
-  height: 66px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.55);
+  border: 2px solid var(--lc-blue-border);
 }
 
 .mh-avatar-fb {
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.22);
-  color: var(--lc-surface);
-  font-size: 24px;
+  background: var(--lc-blue-light);
+  color: var(--lc-blue);
+  font-size: 20px;
   font-weight: 800;
 }
 
@@ -2248,14 +2262,13 @@ onBeforeUnmount(() => {
   bottom: -5px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--lc-surface);
-  color: var(--me-primary);
+  background: var(--lc-blue);
+  color: var(--lc-surface);
   border-radius: 999px;
-  padding: 1px 8px;
+  padding: 1px 7px;
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .mh-hero-info {
@@ -2265,9 +2278,9 @@ onBeforeUnmount(() => {
 }
 
 .mh-hero-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
-  color: var(--lc-surface);
+  color: var(--lc-text);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -2277,8 +2290,8 @@ onBeforeUnmount(() => {
 .mh-hero-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 6px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .mh-verify-tag,
@@ -2290,28 +2303,28 @@ onBeforeUnmount(() => {
 }
 
 .mh-verify-tag {
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--lc-soft);
+  color: var(--lc-muted);
 }
 
 .mh-verify-tag.is-verified {
-  background: rgba(16, 185, 129, 0.28);
-  color: var(--lc-green-light);
+  background: var(--lc-green-light);
+  color: var(--lc-green);
 }
 
 .mh-role-tag {
-  background: rgba(255, 255, 255, 0.13);
-  color: rgba(255, 255, 255, 0.65);
+  background: var(--lc-blue-light);
+  color: var(--lc-blue);
 }
 
 .mh-hero-meta {
-  margin-top: 10px;
+  margin-top: 6px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--lc-muted);
 }
 
 .mh-hero :deep(.mh-badge-row) {
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
 .mh-meta-line {
@@ -2324,12 +2337,12 @@ onBeforeUnmount(() => {
 
 .mh-meta-id {
   flex: 0 0 auto;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--lc-subtle);
   font-weight: 600;
 }
 
 .mh-meta-sep {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--lc-border);
   user-select: none;
 }
 
@@ -2337,7 +2350,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--lc-text);
   word-break: break-all;
 }
 
@@ -2346,11 +2359,11 @@ onBeforeUnmount(() => {
   margin-left: 2px;
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--lc-blue-border);
+  background: var(--lc-blue-light);
   font-size: 10px;
   font-weight: 700;
-  color: #fff;
+  color: var(--lc-blue);
   cursor: pointer;
   text-decoration: none;
   line-height: 1.3;
@@ -2364,7 +2377,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-top: 2px;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--lc-muted);
 }
 
 .mh-meta-feedback.err {
@@ -2372,24 +2385,24 @@ onBeforeUnmount(() => {
 }
 
 .mh-hero-actions {
-  flex: 0 0 auto;
-  display: grid;
-  gap: 8px;
-  justify-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .mh-message-btn,
 .mh-edit-btn {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--lc-surface);
-  font-size: 12px;
+  border: 1px solid var(--lc-blue-border);
+  border-radius: 999px;
+  background: var(--lc-surface);
+  color: var(--lc-blue);
+  font-size: 11px;
   font-weight: 700;
-  padding: 6px 13px;
+  height: 26px;
+  padding: 0 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s;
   text-decoration: none;
 }
 
@@ -2415,15 +2428,15 @@ onBeforeUnmount(() => {
 
 .mh-message-btn:active,
 .mh-edit-btn:active {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--lc-blue-light);
 }
 
 .mh-hero-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--lc-border);
 }
 
 .mh-hero-stat {
@@ -2443,36 +2456,36 @@ onBeforeUnmount(() => {
 }
 
 .mh-hero-stat + .mh-hero-stat {
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid var(--lc-border);
 }
 
 .mh-hero-stat strong {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 800;
-  color: var(--lc-surface);
+  color: var(--lc-text);
   line-height: 1;
 }
 
 .mh-hero-stat small {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 10px;
+  color: var(--lc-subtle);
 }
 
 /* ── Shared card base ────────────────────────────────────── */
 .mh-card {
-  margin-bottom: 14px;
-  border-radius: 18px;
+  margin-bottom: 6px;
+  border-radius: 10px;
   background: var(--lc-surface);
-  border: 1px solid var(--lc-soft-alt);
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
-  padding: 16px;
+  border: 1px solid var(--lc-border);
+  box-shadow: none;
+  padding: 10px;
 }
 
 .mh-task-entry {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 10px;
   text-decoration: none;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
@@ -2483,14 +2496,14 @@ onBeforeUnmount(() => {
 }
 
 .mh-task-entry-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(99, 102, 241, 0.14));
-  font-size: 18px;
+  border-radius: 10px;
+  background: var(--lc-blue-light);
+  font-size: 16px;
 }
 
 .mh-task-entry-body {
@@ -2522,15 +2535,17 @@ onBeforeUnmount(() => {
 
 /* ── Growth slim bar ─────────────────────────────────────── */
 .mh-growth-slim {
-  padding: 10px 14px 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--lc-border);
 }
 
 .mh-grow-line1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .mh-grow-title {
@@ -2570,13 +2585,18 @@ onBeforeUnmount(() => {
 .mh-exp-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--lc-violet), var(--lc-indigo));
+  background: var(--lc-blue);
   transition: width 0.5s ease;
 }
 
 /* ── Function grid ───────────────────────────────────────── */
+.me-mobile :deep(.mh-invite.my-invite-panel),
+.me-mobile :deep(.my-invite-panel) {
+  margin-bottom: 6px;
+}
+
 .mh-func-card {
-  padding: 14px 8px 10px;
+  padding: 6px 4px;
 }
 
 .mh-func-grid {
@@ -2589,8 +2609,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
-  padding: 12px 4px 10px;
+  gap: 4px;
+  padding: 6px 2px;
   text-decoration: none;
   color: inherit;
   border-radius: 12px;
@@ -2605,15 +2625,15 @@ onBeforeUnmount(() => {
 .mh-func-icon {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 18px;
   line-height: 1;
 }
 
 .mh-func-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--lc-text-deep);
   text-align: center;
@@ -2739,9 +2759,9 @@ onBeforeUnmount(() => {
 .mh-setting-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 10px 12px;
   border: 0;
   border-bottom: 1px solid var(--lc-soft);
   background: var(--lc-surface);
@@ -2790,51 +2810,10 @@ onBeforeUnmount(() => {
   color: var(--lc-red);
 }
 
-/* ── Responsive tweaks (≤ 390 px, iPhone 13 等) ─────────── */
-@media (max-width: 390px) {
-  .mh-hero-inner {
-    gap: 10px;
-  }
-
-  .mh-message-btn,
-  .mh-edit-btn {
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-
-  .mh-hero-name {
-    font-size: 17px;
-  }
-}
-
-/* ── Responsive tweaks (≤ 375 px) ───────────────────────── */
 @media (max-width: 375px) {
   .me-mobile {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .mh-hero {
-    padding: 16px 14px 14px;
-  }
-
-  .mh-avatar {
-    width: 58px;
-    height: 58px;
-  }
-
-  .mh-avatar-fb {
-    font-size: 20px;
-  }
-
-  .mh-func-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 19px;
-  }
-
-  .mh-func-title {
-    font-size: 11px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 }
 </style>

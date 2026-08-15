@@ -9,11 +9,11 @@
 
     <template v-else-if="group">
       <header class="gd-hero">
-        <img class="gd-cover" :src="group.coverUrl" :alt="group.name">
+        <img v-if="group.coverUrl" class="gd-cover" :src="group.coverUrl" :alt="group.name">
         <div class="gd-hero-body">
           <h1>{{ group.name }}</h1>
           <p class="gd-meta">{{ group.region }} · {{ group.memberCount }} 人 · {{ group.joinLabel }}</p>
-          <p class="gd-desc">{{ group.description }}</p>
+          <p v-if="group.description" class="gd-desc">{{ group.description }}</p>
           <div class="gd-hero-actions">
             <button
               type="button"
@@ -74,48 +74,62 @@
 
       <!-- 首页 -->
       <div v-if="activeTab === 'home'" class="gd-panel">
-        <article class="gd-card">
-          <h2>今日打卡</h2>
-          <p class="gd-sub">
-            今日 {{ checkinSummary.todayCount }} 人打卡
-            <template v-if="group.isMember"> · 连续 {{ checkinSummary.myStreakDays }} 天</template>
-          </p>
-          <router-link :to="groupTabPath('checkin')" class="gd-link">去打卡 →</router-link>
+        <article class="gd-card gd-card-row">
+          <div>
+            <h2>今日打卡</h2>
+            <p class="gd-sub">
+              今日 {{ checkinSummary.todayCount }} 人打卡
+              <template v-if="group.isMember"> · 连续 {{ checkinSummary.myStreakDays }} 天</template>
+            </p>
+          </div>
+          <router-link :to="groupTabPath('checkin')" class="gd-link">去打卡</router-link>
         </article>
-        <article class="gd-card">
-          <h2>团体动态</h2>
-          <p class="gd-sub">{{ posts.length ? `最近 ${posts.length} 条讨论` : '还没有动态' }}</p>
-          <router-link :to="groupTabPath('posts')" class="gd-link">查看动态 →</router-link>
+        <article class="gd-card gd-card-row">
+          <div>
+            <h2>团体动态</h2>
+            <p class="gd-sub">{{ posts.length ? `最近 ${posts.length} 条讨论` : '还没有动态' }}</p>
+          </div>
+          <router-link :to="groupTabPath('posts')" class="gd-link">查看</router-link>
         </article>
-        <article class="gd-card">
-          <h2>团体活动</h2>
-          <p class="gd-sub">
-            {{ upcomingActivities.length ? `近期 ${upcomingActivities.length} 个活动可参与` : '暂无近期活动' }}
-          </p>
-          <router-link :to="groupTabPath('activities')" class="gd-link">查看活动 →</router-link>
+        <article class="gd-card gd-card-row">
+          <div>
+            <h2>团体活动</h2>
+            <p class="gd-sub">
+              {{ upcomingActivities.length ? `近期 ${upcomingActivities.length} 个活动可参与` : '暂无近期活动' }}
+            </p>
+          </div>
+          <router-link :to="groupTabPath('activities')" class="gd-link">查看</router-link>
         </article>
-        <article v-if="isPollsSupported" class="gd-card">
-          <h2>团体投票</h2>
-          <p class="gd-sub">参与团体决策与意见征集</p>
-          <router-link :to="groupTabPath('polls')" class="gd-link">查看投票 →</router-link>
+        <article v-if="isPollsSupported" class="gd-card gd-card-row">
+          <div>
+            <h2>团体投票</h2>
+            <p class="gd-sub">参与团体决策与意见征集</p>
+          </div>
+          <router-link :to="groupTabPath('polls')" class="gd-link">查看</router-link>
         </article>
-        <article v-if="group.isMember" class="gd-card">
-          <h2>今日任务</h2>
-          <p class="gd-sub">
-            <template v-if="claimableCount">有 {{ claimableCount }} 个奖励待领取</template>
-            <template v-else>完成团体任务领经验</template>
-          </p>
-          <router-link :to="groupTabPath('tasks')" class="gd-link">查看任务 →</router-link>
+        <article v-if="group.isMember" class="gd-card gd-card-row">
+          <div>
+            <h2>今日任务</h2>
+            <p class="gd-sub">
+              <template v-if="claimableCount">有 {{ claimableCount }} 个奖励待领取</template>
+              <template v-else>完成团体任务领经验</template>
+            </p>
+          </div>
+          <router-link :to="groupTabPath('tasks')" class="gd-link">查看</router-link>
         </article>
-        <article v-if="articles.length" class="gd-card">
-          <h2>最新文章</h2>
-          <p class="gd-notice-title">{{ articles[0].title }}</p>
-          <router-link :to="groupTabPath('articles')" class="gd-link">全部文章 →</router-link>
+        <article v-if="articles.length" class="gd-card gd-card-row">
+          <div>
+            <h2>最新文章</h2>
+            <p class="gd-notice-title">{{ articles[0].title }}</p>
+          </div>
+          <router-link :to="groupTabPath('articles')" class="gd-link">全部</router-link>
         </article>
-        <article v-if="notices.length" class="gd-card">
-          <h2>最新公告</h2>
-          <p class="gd-notice-title">{{ notices[0].title }}</p>
-          <router-link :to="groupTabPath('notices')" class="gd-link">全部公告 →</router-link>
+        <article v-if="notices.length" class="gd-card gd-card-row">
+          <div>
+            <h2>最新公告</h2>
+            <p class="gd-notice-title">{{ notices[0].title }}</p>
+          </div>
+          <router-link :to="groupTabPath('notices')" class="gd-link">全部</router-link>
         </article>
         <article v-if="seasonRank" class="gd-card gd-season">
           <GroupSeasonPanel
@@ -833,11 +847,21 @@ const {
 
 <style scoped>
 .gd-mobile {
-  padding-bottom: 24px;
+  padding-bottom: 16px;
 }
 
 .gd-capability-banner {
-  margin: 12px 0 0;
+  margin: 8px 12px 0;
+}
+
+.gd-capability-banner :deep(.group-capability-banner) {
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.gd-capability-banner :deep(.group-capability-banner p) {
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .gd-state {
@@ -888,53 +912,55 @@ const {
 
 .gd-cover {
   width: 100%;
-  height: 140px;
+  height: 88px;
   object-fit: cover;
   display: block;
 }
 
 .gd-hero-body {
-  padding: 12px 14px 16px;
+  padding: 10px 14px 12px;
 }
 
 .gd-hero-body h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 800;
+  line-height: 1.3;
 }
 
 .gd-meta {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
   color: var(--lc-subtle, #64748b);
 }
 
 .gd-desc {
-  margin: 8px 0 0;
-  font-size: 13px;
-  line-height: 1.55;
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--lc-text, #334155);
 }
 
 .gd-camp-panel {
-  margin: 0 12px 12px;
+  margin: 8px 12px 0;
 }
 
 .gd-hero-actions {
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .gd-join {
-  width: 100%;
-  height: 42px;
+  flex: 1;
+  height: 34px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--lc-indigo, #4f46e5), var(--lc-violet, #7c3aed));
   color: #fff;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .gd-join:disabled {
@@ -945,13 +971,14 @@ const {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 40px;
+  flex: 1;
+  min-height: 34px;
+  padding: 0 10px;
   border: 1px solid var(--lc-indigo, #4f46e5);
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--lc-indigo, #4f46e5);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   text-decoration: none;
   background: #fff;
 }
@@ -1038,7 +1065,7 @@ const {
 .gd-tabs {
   display: flex;
   gap: 4px;
-  padding: 10px 8px;
+  padding: 6px 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--lc-surface, #fff);
@@ -1050,7 +1077,7 @@ const {
 
 .gd-tabs a {
   flex-shrink: 0;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
@@ -1078,31 +1105,52 @@ const {
 }
 
 .gd-panel {
-  padding: 12px 14px;
+  padding: 8px 12px 12px;
 }
 
 .gd-card {
-  padding: 14px;
-  margin-bottom: 10px;
-  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
   background: #fff;
   border: 1px solid var(--lc-soft, #e8ecf4);
 }
 
+.gd-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gd-card-row > div {
+  min-width: 0;
+  flex: 1;
+}
+
 .gd-card h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .gd-sub {
-  margin: 6px 0 0;
-  font-size: 13px;
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--lc-subtle, #64748b);
+}
+
+.gd-card-row .gd-link {
+  margin-top: 0;
+  flex-shrink: 0;
+  font-size: 12px;
 }
 
 .gd-link {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 13px;
   font-weight: 700;
   color: var(--lc-indigo, #4f46e5);
@@ -1371,8 +1419,8 @@ const {
 }
 
 .gd-notice-title {
-  margin: 6px 0 0;
-  font-size: 13px;
+  margin: 2px 0 0;
+  font-size: 12px;
   color: var(--lc-subtle, #64748b);
 }
 

@@ -60,20 +60,18 @@ const badgeSummary = computed(() => {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 9px 12px 9px 10px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 6px 18px rgba(15, 23, 42, 0.12);
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--lc-blue-light);
+  border: 1px solid var(--lc-blue-border);
+  box-shadow: none;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
 }
 
 .mh-badge-row:active {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+  background: var(--lc-soft);
 }
 
 .mh-badge-icons {
@@ -88,11 +86,11 @@ const badgeSummary = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+  background: var(--lc-surface);
+  box-shadow: 0 0 0 2px var(--lc-blue-border);
 }
 
 .mh-badge-slot + .mh-badge-slot {
@@ -100,7 +98,8 @@ const badgeSummary = computed(() => {
 }
 
 .mh-badge-slot.is-locked {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 2px var(--lc-border);
+  opacity: 0.55;
 }
 
 .mh-badge-copy {
@@ -115,7 +114,7 @@ const badgeSummary = computed(() => {
 .mh-badge-text {
   font-size: 13px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.98);
+  color: var(--lc-text);
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -124,8 +123,8 @@ const badgeSummary = computed(() => {
   flex: 0 0 auto;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--lc-surface);
+  color: var(--lc-blue);
   font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
@@ -135,7 +134,7 @@ const badgeSummary = computed(() => {
   flex: 0 0 auto;
   font-size: 18px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--lc-subtle);
   line-height: 1;
 }
 

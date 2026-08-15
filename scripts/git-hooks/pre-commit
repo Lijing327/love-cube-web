@@ -1,0 +1,16 @@
+#!/bin/sh
+# Love Cube pre-commit：Stylelint + 平台语义防回流
+# 安装：bash scripts/install-git-hooks.sh
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT" || exit 1
+
+if [ -f "$ROOT/scripts/stylelint-guard.sh" ]; then
+  bash "$ROOT/scripts/stylelint-guard.sh" --git-hook || exit 1
+fi
+
+if [ -f "$ROOT/scripts/semantic-guard.sh" ]; then
+  bash "$ROOT/scripts/semantic-guard.sh" --git-hook || exit 1
+fi
+
+exit 0

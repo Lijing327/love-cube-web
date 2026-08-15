@@ -740,7 +740,8 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .content-hub {
     width: min(100% - 20px, 720px);
-    margin-top: var(--lc-space-3);
+    margin-top: 8px;
+    gap: 8px;
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
   }
@@ -919,11 +920,6 @@ onMounted(async () => {
 
   .metric-grid.hero-metrics .metric-card p {
     display: none;
-  }
-
-  .content-hub {
-    gap: 8px;
-    margin-top: 8px;
   }
 
   .recommend-section,

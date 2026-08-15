@@ -183,6 +183,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { submitCoCreationFeedback } from '@/api/feedback.js'
 import { fetchAnnouncements } from '@/api/platformContent.js'
+import { useAppBadge } from '@/composables/useAppBadge.js'
 import { useUserStore } from '@/stores/user.js'
 import RouteBackButton from '@/components/RouteBackButton.vue'
 import loveCubeIcon from '@/assets/brand/love-cube-icon.svg'
@@ -261,7 +262,7 @@ const mobileAccountNavItems = computed(() => {
   accountItems.unshift({ to: '/login', label: '登录 / 注册' })
   return accountItems
 })
-const messageBadge = computed(() => '')
+const { badgeText: messageBadge } = useAppBadge()
 const navHomePaths = computed(() => new Set([
   ...navItems.map(item => item.to),
   '/feedback',
@@ -1872,6 +1873,13 @@ onBeforeUnmount(() => {
 .dialog-fade-enter-active,
 .dialog-fade-leave-active {
   transition: opacity 0.18s ease;
+}
+
+.dialog-fade-leave-active,
+.dialog-fade-leave-to,
+.menu-fade-leave-active,
+.menu-fade-leave-to {
+  pointer-events: none;
 }
 
 .dialog-fade-enter-from,

@@ -8,8 +8,16 @@
         </template>
       </Suspense>
     </router-view>
+    <PwaShell />
   </div>
 </template>
+
+<script setup>
+import PwaShell from '@/components/PwaShell.vue'
+import { useAppBadge } from '@/composables/useAppBadge.js'
+
+useAppBadge()
+</script>
 
 <style scoped>
 .app-root {

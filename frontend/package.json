@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint:style": "stylelint \"src/**/*.vue\" \"src/assets/styles/*.css\"",
-    "lint:style:fix": "stylelint \"src/**/*.vue\" \"src/assets/styles/*.css\" --fix"
+    "lint:style:fix": "stylelint \"src/**/*.vue\" \"src/assets/styles/*.css\" --fix",
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@vant/area-data": "^2.1.0",
@@ -30,6 +31,7 @@
     "stylelint": "^17.9.0",
     "stylelint-config-recommended-vue": "^1.6.1",
     "unplugin-vue-components": "^32.0.0",
-    "vite": "^6.3.0"
+    "vite": "^6.3.0",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

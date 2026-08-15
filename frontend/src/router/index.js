@@ -73,4 +73,25 @@ router.beforeEach(async (to) => {
   }
 })
 
+function isStaleChunkError(error) {
+  const name = String(error?.name || '')
+  const message = String(error?.message || error || '')
+  return (
+    name === 'ChunkLoadError' ||
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Loading chunk') ||
+    message.includes('Loading CSS chunk') ||
+    message.includes('Unable to preload CSS')
+  )
+}
+
+router.onError((error) => {
+  if (!isStaleChunkError(error) || typeof window === 'undefined') return
+  const key = 'lc-stale-chunk-reload'
+  const last = Number(window.sessionStorage.getItem(key) || 0)
+  if (last && Date.now() - last < 10000) return
+  window.sessionStorage.setItem(key, String(Date.now()))
+  window.location.reload()
+})
+
 export default router

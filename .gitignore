@@ -14,3 +14,10 @@ frontend/dist/
 
 # Dependencies and local bundler caches
 frontend/node_modules/
+
+# Local Playwright smoke / page-tour screenshots
+frontend/scripts/.loggedin-flow/
+frontend/scripts/.page-tour/
+frontend/scripts/.smoke-out/
+frontend/scripts/.verify-fix/
+frontend/scripts/.verify-fix2/

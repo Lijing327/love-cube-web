@@ -528,15 +528,18 @@ const dailyTasks = computed(() => {
 
 const groupInfo = computed(() => {
   const g = myGroupsList.value[0]
-  if (!g) return { name: '暂未加入团体', role: '--', members: 0, activity: '--', weekExp: 0 }
+  if (!g) return { id: '', name: '暂未加入团体', role: '--', members: 0, activity: '--', weekExp: 0, canManage: false }
   const roleMap = { OWNER: '创建者', ADMIN: '管理员', MEMBER: '成员' }
-  const role = g.isOwner ? '创建者' : (roleMap[String(g.myRole || '').toUpperCase()] || '成员')
+  const roleKey = String(g.myRole || '').toUpperCase()
+  const role = g.isOwner ? '创建者' : (roleMap[roleKey] || '成员')
   return {
+    id: String(g.id || ''),
     name: g.name || '--',
     role,
     members: Number(g.memberCount || 0),
     activity: g.memberCount > 50 ? '高' : g.memberCount > 20 ? '中等' : '较低',
-    weekExp: 0
+    weekExp: 0,
+    canManage: Boolean(g.isOwner || g.managed || ['OWNER', 'ADMIN'].includes(roleKey))
   }
 })
 

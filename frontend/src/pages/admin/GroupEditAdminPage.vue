@@ -158,6 +158,28 @@
         <div v-else class="empty-hint">暂无动态</div>
       </section>
 
+      <section v-else-if="activeTab === 'articles'" class="platform-card">
+        <div class="section-head">
+          <h2>团体文章</h2>
+        </div>
+        <div v-if="loading.articles" class="tab-loading">文章加载中...</div>
+        <div v-else-if="errors.articles" class="inline-error">{{ errors.articles }}</div>
+        <div v-else-if="articleItems.length" class="content-list">
+          <article v-for="article in articleItems" :key="article.id" class="content-row">
+            <header>
+              <strong>{{ article.title }}</strong>
+              <span>{{ formatDateTime(article.createdAt) }}</span>
+            </header>
+            <p>{{ article.summary || article.content }}</p>
+            <p v-if="article.authorName" class="article-meta">作者：{{ article.authorName }}</p>
+            <div class="row-actions">
+              <button type="button" class="admin-btn danger" :disabled="saving" @click="removeArticleRecord(article)">删除</button>
+            </div>
+          </article>
+        </div>
+        <div v-else class="empty-hint">暂无文章。成员可在前台团体页或运营台发布。</div>
+      </section>
+
       <section v-else-if="activeTab === 'notices'" class="platform-card">
         <div class="section-head">
           <h2>团体公告</h2>
@@ -268,6 +290,8 @@ import {
   approveAdminGroupRequest,
   fetchAdminGroupDetail,
   fetchAdminGroupMembers,
+  deleteGroupArticle,
+  fetchGroupArticles,
   fetchLegacyGroupPosts,
   getAdminGroupAdmins,
   getAdminGroupJoinRequests,
@@ -304,6 +328,8 @@ const groupAdmins = ref([])
 const isFirstDetailLoad = ref(true)
 const pendingMembers = ref([])
 const postsLoaded = ref(false)
+const articlesLoaded = ref(false)
+const articles = ref([])
 const memberStatus = ref('approved')
 const saving = ref(false)
 const message = ref('')
@@ -314,8 +340,8 @@ const newAdminRole = ref('ADMIN')
 /** 打开「管理员设置」时拉取的已加入成员，用于添加管理员时按昵称选择 */
 const adminCandidateMembers = ref([])
 
-const loading = reactive({ detail: true, members: false, posts: false, notices: false, admins: false })
-const errors = reactive({ detail: '', members: '', posts: '', notices: '', admins: '' })
+const loading = reactive({ detail: true, members: false, posts: false, notices: false, articles: false, admins: false })
+const errors = reactive({ detail: '', members: '', posts: '', notices: '', articles: '', admins: '' })
 const form = reactive({ name: '', region: '', category: 'interest', description: '', coverUrl: '', joinType: 'approval', status: 'active' })
 
 const LEGACY_CATEGORY_MAP = {
@@ -348,9 +374,10 @@ function normalizeCategoryValue(raw) {
 const ALL_TABS = [
   { key: 'info',    label: '基础信息' },
   { key: 'members', label: '成员审核' },
-  { key: 'posts',   label: '团体动态' },
-  { key: 'notices', label: '团体公告' },
-  { key: 'admins',  label: '管理员设置' }
+  { key: 'posts',    label: '团体动态' },
+  { key: 'articles', label: '团体文章' },
+  { key: 'notices',  label: '团体公告' },
+  { key: 'admins',   label: '管理员设置' }
 ]
 
 function tabVisible(key) {
@@ -358,7 +385,7 @@ function tabVisible(key) {
   if (key === 'admins') {
     return userRole.value === 'OWNER' || (userPermissions.value && userPermissions.value.includes('group.manage.admins'))
   }
-  if (key === 'info' || key === 'posts' || key === 'notices') {
+  if (key === 'info' || key === 'posts' || key === 'notices' || key === 'articles') {
     return userRole.value !== 'REVIEWER'
   }
   return true
@@ -423,6 +450,15 @@ const noticeItems = computed(() => posts.value
     content: n.content,
     createdAt: n.createdAt
   })))
+
+const articleItems = computed(() => articles.value.map((item) => ({
+  id: item.id,
+  title: item.title || '未命名文章',
+  summary: item.summary || '',
+  content: item.content || '',
+  authorName: item.authorName || '',
+  createdAt: item.createdAt
+})))
 
 function isNoticeType(p) {
   const t = String(p.type || '').toLowerCase()
@@ -491,6 +527,7 @@ async function loadTabData(tab) {
     }
   }
   if (tab === 'posts') await loadPosts()
+  if (tab === 'articles') await loadArticles()
   if (tab === 'notices') await loadNotices()
   if (tab === 'admins') await loadGroupAdmins()
 }
@@ -649,6 +686,35 @@ async function loadPosts() {
     errors.posts = err.message || '团体动态加载失败'
   } finally {
     loading.posts = false
+  }
+}
+
+async function loadArticles() {
+  if (articlesLoaded.value) return
+  loading.articles = true
+  errors.articles = ''
+  try {
+    articles.value = unwrapList(await fetchGroupArticles(groupId))
+    articlesLoaded.value = true
+  } catch (err) {
+    articles.value = []
+    errors.articles = err.message || '团体文章加载失败'
+  } finally {
+    loading.articles = false
+  }
+}
+
+async function removeArticleRecord(article) {
+  if (!window.confirm(`确定删除文章「${article.title}」？`)) return
+  saving.value = true
+  try {
+    await deleteGroupArticle(groupId, article.id)
+    articles.value = articles.value.filter((item) => String(item.id) !== String(article.id))
+    flash('文章已删除')
+  } catch (err) {
+    flash(err.message || '删除失败', 'error')
+  } finally {
+    saving.value = false
   }
 }
 
@@ -1148,6 +1214,11 @@ onMounted(async () => {
   color: var(--lc-muted);
   line-height: 1.7;
   white-space: pre-line;
+}
+
+.article-meta {
+  font-size: 12px;
+  color: var(--lc-subtle);
 }
 
 .image-grid {

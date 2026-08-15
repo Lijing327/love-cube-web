@@ -5,6 +5,7 @@ import com.lovecube.backend.entity.PlatformGroupAdmin;
 import com.lovecube.backend.models.User;
 import com.lovecube.backend.repository.AdminRolePermissionRepository;
 import com.lovecube.backend.repository.AdminUserRoleRepository;
+import com.lovecube.backend.repository.PlatGroupRepository;
 import com.lovecube.backend.repository.PlatformGroupAdminRepository;
 import com.lovecube.backend.repository.PlatformGroupRepository;
 import com.lovecube.backend.repository.UserRepository;
@@ -35,19 +36,22 @@ public class AdminAuthService {
     private final AdminRolePermissionRepository adminRolePermissionRepository;
     private final PlatformGroupAdminRepository platformGroupAdminRepository;
     private final PlatformGroupRepository platformGroupRepository;
+    private final PlatGroupRepository platGroupRepository;
 
     public AdminAuthService(
             UserRepository userRepository,
             AdminUserRoleRepository adminUserRoleRepository,
             AdminRolePermissionRepository adminRolePermissionRepository,
             PlatformGroupAdminRepository platformGroupAdminRepository,
-            PlatformGroupRepository platformGroupRepository
+            PlatformGroupRepository platformGroupRepository,
+            PlatGroupRepository platGroupRepository
     ) {
         this.userRepository = userRepository;
         this.adminUserRoleRepository = adminUserRoleRepository;
         this.adminRolePermissionRepository = adminRolePermissionRepository;
         this.platformGroupAdminRepository = platformGroupAdminRepository;
         this.platformGroupRepository = platformGroupRepository;
+        this.platGroupRepository = platGroupRepository;
     }
 
     public User requireUser(String authHeader) {
@@ -195,9 +199,30 @@ public class AdminAuthService {
      * 用于修复 V39 迁移遗漏 platform_group_admin 记录的 legacy 团体。
      */
     private boolean isGroupOwnerOrCreator(Long userId, String groupId) {
-        return platformGroupRepository.findById(groupId)
+        if (platformGroupRepository.findById(groupId)
                 .map(g -> userId.equals(g.getOwnerUserId()) || userId.equals(g.getCreatedBy()))
+                .orElse(false)) {
+            return true;
+        }
+        return parseSpaceGroupId(groupId)
+                .flatMap(platGroupRepository::findById)
+                .map(g -> userId.equals(g.getOwnerUserId()))
                 .orElse(false);
+    }
+
+    private Optional<Long> parseSpaceGroupId(String groupId) {
+        if (groupId == null || groupId.isBlank()) {
+            return Optional.empty();
+        }
+        String raw = groupId.startsWith("legacy-") ? groupId.substring("legacy-".length()) : groupId;
+        if (raw.isEmpty() || !raw.chars().allMatch(Character::isDigit)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Long.parseLong(raw));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
+        }
     }
 
     /**

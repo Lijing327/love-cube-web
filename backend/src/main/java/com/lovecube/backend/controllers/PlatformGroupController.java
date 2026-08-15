@@ -30,6 +30,7 @@ import com.lovecube.backend.repository.PlatformEventRepository;
 import com.lovecube.backend.repository.UserGrowthRepository;
 import com.lovecube.backend.repository.UserRepository;
 import com.lovecube.backend.services.AdminAuthService;
+import com.lovecube.backend.services.GroupAdminRoleConstants;
 import com.lovecube.backend.services.GroupActivityEngagementService;
 import com.lovecube.backend.services.GroupWeeklyDigestService;
 import com.lovecube.backend.services.GrowthService;
@@ -489,6 +490,10 @@ public class PlatformGroupController {
         owner.setCreatedAt(LocalDateTime.now());
         owner.setUpdatedAt(LocalDateTime.now());
         memberRepository.save(owner);
+        adminAuthService.upsertPlatformGroupAdmin(
+                String.valueOf(saved.getId()),
+                user.getUserid(),
+                GroupAdminRoleConstants.OWNER);
 
         if ("invite".equals(saved.getJoinMode())) {
             PlatformGroupInviteSupport.ensureInviteCode(saved, groupRepository);

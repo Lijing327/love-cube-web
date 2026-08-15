@@ -19,9 +19,9 @@
       </div>
 
       <div class="action-side">
-        <router-link class="btn btn-enter" :to="myGroupsPath()">进入团体</router-link>
-        <router-link class="btn btn-post" :to="groupsPath()">发布公告</router-link>
-        <router-link class="btn btn-member" :to="myGroupsPath()">成员管理</router-link>
+        <router-link class="btn btn-enter" :to="enterGroupTo">进入团体</router-link>
+        <router-link class="btn btn-post" :to="noticeTo">发布公告</router-link>
+        <router-link class="btn btn-member" :to="membersTo">成员管理</router-link>
         <router-link class="more-link" :to="myGroupsPath()">全部团体 ></router-link>
       </div>
     </div>
@@ -46,14 +46,31 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { resolveSpaceManageEntry } from '@/api/groups.js'
 import { usePlatformPath } from '@/composables/usePlatformPath.js'
 
-defineProps({
+const props = defineProps({
   groupInfo: { type: Object, required: true },
   groupRanking: { type: Array, required: true },
 })
 
 const { groupsPath, myGroupsPath } = usePlatformPath()
+
+const groupId = computed(() => String(props.groupInfo?.id || '').trim())
+const canManage = computed(() => Boolean(props.groupInfo?.canManage && groupId.value))
+
+const enterGroupTo = computed(() => (groupId.value ? groupsPath(groupId.value) : myGroupsPath()))
+const noticeTo = computed(() => (
+  canManage.value
+    ? resolveSpaceManageEntry(groupId.value, { tab: 'notices' })
+    : myGroupsPath()
+))
+const membersTo = computed(() => (
+  canManage.value
+    ? resolveSpaceManageEntry(groupId.value, { tab: 'members' })
+    : myGroupsPath()
+))
 </script>
 
 <style scoped>

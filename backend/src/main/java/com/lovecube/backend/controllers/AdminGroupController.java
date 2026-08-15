@@ -8,6 +8,7 @@ import com.lovecube.backend.entity.PlatGroupMember;
 import com.lovecube.backend.entity.PlatformGroup;
 import com.lovecube.backend.entity.PlatformGroupAdmin;
 import com.lovecube.backend.models.User;
+import com.lovecube.backend.notification.NotificationCatalog;
 import com.lovecube.backend.repository.GroupJoinRequestRepository;
 import com.lovecube.backend.repository.GroupMemberRepository;
 import com.lovecube.backend.repository.GroupPostRepository;
@@ -18,6 +19,7 @@ import com.lovecube.backend.repository.PlatformGroupRepository;
 import com.lovecube.backend.repository.UserRepository;
 import com.lovecube.backend.services.AdminAuthService;
 import com.lovecube.backend.services.GroupAdminRoleConstants;
+import com.lovecube.backend.services.NotificationService;
 import com.lovecube.backend.services.GroupMemberRealNameSupport;
 import com.lovecube.backend.services.PermissionConstants;
 import org.springframework.http.HttpStatus;
@@ -41,7 +43,8 @@ public class AdminGroupController {
     private final PlatGroupRepository platGroupRepository;
     private final PlatGroupMemberRepository platGroupMemberRepository;
     private final UserRepository userRepository;
-    private final AdminAuthService adminAuthService;
+    private final AdminAuthService adminAuthService; 
+    private final NotificationService notificationService;
 
     public AdminGroupController(
             PlatformGroupRepository groupRepository,
@@ -52,7 +55,8 @@ public class AdminGroupController {
             PlatGroupRepository platGroupRepository,
             PlatGroupMemberRepository platGroupMemberRepository,
             UserRepository userRepository,
-            AdminAuthService adminAuthService
+            AdminAuthService adminAuthService,
+            NotificationService notificationService
     ) {
         this.groupRepository = groupRepository;
         this.memberRepository = memberRepository;
@@ -63,6 +67,7 @@ public class AdminGroupController {
         this.platGroupMemberRepository = platGroupMemberRepository;
         this.userRepository = userRepository;
         this.adminAuthService = adminAuthService;
+        this.notificationService = notificationService;
     }
 
     // ── 团体列表 ───────────────────────────────────────────────────────────────
@@ -110,7 +115,22 @@ public class AdminGroupController {
         }).collect(Collectors.toList());
 
         if (!manageAll) {
-            return modernItems;
+            List<Map<String, Object>> ownedSpace = collectOwnedSpaceGroups(user);
+            if (ownedSpace.isEmpty()) {
+                return modernItems;
+            }
+            Set<String> modernIds = modernItems.stream()
+                    .map(item -> String.valueOf(item.getOrDefault("id", "")))
+                    .collect(Collectors.toSet());
+            List<Map<String, Object>> merged = new ArrayList<>(modernItems);
+            for (Map<String, Object> spaceItem : ownedSpace) {
+                String spaceId = String.valueOf(spaceItem.getOrDefault("id", ""));
+                if (modernIds.contains(spaceId) || modernIds.contains("legacy-" + spaceId)) {
+                    continue;
+                }
+                merged.add(spaceItem);
+            }
+            return merged;
         }
 
         // 兼容旧平台团体表：超级管理员应可在“我的团体”中看见全量团体数据。
@@ -162,6 +182,9 @@ public class AdminGroupController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在");
         }
         adminAuthService.requireGroupAdmin(authHeader, id);
+        if (space.isPresent()) {
+            ensureSpaceOwnerAdmin(space.get());
+        }
         Map<String, Object> item = modern.isPresent()
                 ? buildGroupDetail(modern.get())
                 : buildLegacyGroupDetail(space.get());
@@ -322,8 +345,11 @@ public class AdminGroupController {
             @PathVariable Long requestId
     ) {
         adminAuthService.requireGroupReviewPermission(authHeader, id);
-        GroupJoinRequest req = joinRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        Optional<GroupJoinRequest> modernReq = joinRequestRepository.findById(requestId);
+        if (modernReq.isEmpty()) {
+            return approveSpaceJoinRequest(id, requestId);
+        }
+        GroupJoinRequest req = modernReq.get();
         if (!adminAuthService.isSameLegacyGroup(id, req.getGroupId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "申请与团体不匹配");
         }
@@ -356,8 +382,11 @@ public class AdminGroupController {
             @PathVariable Long requestId
     ) {
         adminAuthService.requireGroupReviewPermission(authHeader, id);
-        GroupJoinRequest req = joinRequestRepository.findById(requestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        Optional<GroupJoinRequest> modernReq = joinRequestRepository.findById(requestId);
+        if (modernReq.isEmpty()) {
+            return rejectSpaceJoinRequest(id, requestId);
+        }
+        GroupJoinRequest req = modernReq.get();
         if (!adminAuthService.isSameLegacyGroup(id, req.getGroupId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "申请与团体不匹配");
         }
@@ -409,16 +438,20 @@ public class AdminGroupController {
             @PathVariable Long userId
     ) {
         adminAuthService.requireGroupManagePermission(authHeader, id);
-        PlatformGroup group = groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
-        if (!memberRepository.existsByGroupIdAndUserId(id, userId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "该用户不是团体成员");
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        if (modern.isPresent()) {
+            PlatformGroup group = modern.get();
+            String canonicalId = group.getId();
+            if (!memberRepository.existsByGroupIdAndUserId(canonicalId, userId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "该用户不是团体成员");
+            }
+            memberRepository.deleteByGroupIdAndUserId(canonicalId, userId);
+            int count = group.getMemberCount() == null ? 0 : group.getMemberCount();
+            group.setMemberCount(Math.max(0, count - 1));
+            groupRepository.save(group);
+            return Map.of("userId", userId, "message", "成员已移除");
         }
-        memberRepository.deleteByGroupIdAndUserId(id, userId);
-        int count = group.getMemberCount() == null ? 0 : group.getMemberCount();
-        group.setMemberCount(Math.max(0, count - 1));
-        groupRepository.save(group);
-        return Map.of("userId", userId, "message", "成员已移除");
+        return removeSpaceMember(id, userId);
     }
 
     // ── 团体动态（OWNER / ADMIN） ──────────────────────────────────────────────
@@ -468,7 +501,15 @@ public class AdminGroupController {
             @PathVariable String id
     ) {
         adminAuthService.requireGroupOwner(authHeader, id);
-        List<PlatformGroupAdmin> admins = groupAdminRepository.findByGroupId(id);
+        Optional<PlatGroup> space = findModernGroup(id).isEmpty() ? findSpaceGroup(id) : Optional.empty();
+        if (space.isPresent()) {
+            ensureSpaceOwnerAdmin(space.get());
+        }
+        String adminGroupId = space.map(g -> String.valueOf(g.getId())).orElse(id);
+        List<PlatformGroupAdmin> admins = groupAdminRepository.findByGroupId(adminGroupId);
+        if (admins.isEmpty() && !adminGroupId.equals(id)) {
+            admins = groupAdminRepository.findByGroupId(id);
+        }
         Set<Long> uids = admins.stream().map(PlatformGroupAdmin::getUserId).collect(Collectors.toSet());
         Map<Long, User> userMap = userRepository.findAllById(uids).stream()
                 .collect(Collectors.toMap(User::getUserid, u -> u));
@@ -504,17 +545,30 @@ public class AdminGroupController {
         }
         userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "用户不存在"));
-        groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+        Optional<PlatGroup> space = findModernGroup(id).isEmpty() ? findSpaceGroup(id) : Optional.empty();
+        if (findModernGroup(id).isEmpty() && space.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在");
+        }
+        String adminGroupId = space.map(g -> String.valueOf(g.getId())).orElse(id);
+        if (space.isPresent()) {
+            ensureSpaceOwnerAdmin(space.get());
+            platGroupMemberRepository.findByGroupIdAndUserId(space.get().getId(), targetUserId).ifPresent(member -> {
+                if ("approved".equals(member.getStatus()) && !"owner".equals(member.getRole())) {
+                    member.setRole("admin");
+                    member.setUpdatedAt(LocalDateTime.now());
+                    platGroupMemberRepository.save(member);
+                }
+            });
+        }
 
-        Optional<PlatformGroupAdmin> existing = groupAdminRepository.findByGroupIdAndUserId(id, targetUserId);
+        Optional<PlatformGroupAdmin> existing = groupAdminRepository.findByGroupIdAndUserId(adminGroupId, targetUserId);
         PlatformGroupAdmin ga;
         if (existing.isPresent()) {
             ga = existing.get();
             ga.setRole(role);
         } else {
             ga = new PlatformGroupAdmin();
-            ga.setGroupId(id);
+            ga.setGroupId(adminGroupId);
             ga.setUserId(targetUserId);
             ga.setRole(role);
         }
@@ -537,13 +591,25 @@ public class AdminGroupController {
         if (operator.getUserid().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不能移除自己（团体拥有者）");
         }
+        String adminGroupId = findSpaceGroup(id).map(g -> String.valueOf(g.getId())).orElse(id);
         // 不能移除其他 OWNER
-        groupAdminRepository.findByGroupIdAndUserId(id, userId).ifPresent(ga -> {
+        groupAdminRepository.findByGroupIdAndUserId(adminGroupId, userId).ifPresent(ga -> {
             if (GroupAdminRoleConstants.isOwner(ga.getRole())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "不能移除团体拥有者");
             }
         });
-        groupAdminRepository.deleteByGroupIdAndUserId(id, userId);
+        groupAdminRepository.deleteByGroupIdAndUserId(adminGroupId, userId);
+        if (!adminGroupId.equals(id)) {
+            groupAdminRepository.deleteByGroupIdAndUserId(id, userId);
+        }
+        findSpaceGroup(id).ifPresent(space ->
+                platGroupMemberRepository.findByGroupIdAndUserId(space.getId(), userId).ifPresent(member -> {
+                    if ("admin".equals(member.getRole())) {
+                        member.setRole("member");
+                        member.setUpdatedAt(LocalDateTime.now());
+                        platGroupMemberRepository.save(member);
+                    }
+                }));
         adminAuthService.cleanGroupOwnerRoleIfUnused(userId);
         return Map.of("userId", userId, "message", "管理员已移除");
     }
@@ -573,6 +639,109 @@ public class AdminGroupController {
         } catch (NumberFormatException ex) {
             return Optional.empty();
         }
+    }
+
+    private void ensureSpaceOwnerAdmin(PlatGroup space) {
+        if (space == null || space.getOwnerUserId() == null) {
+            return;
+        }
+        adminAuthService.upsertPlatformGroupAdmin(
+                String.valueOf(space.getId()),
+                space.getOwnerUserId(),
+                GroupAdminRoleConstants.OWNER);
+    }
+
+    private List<Map<String, Object>> collectOwnedSpaceGroups(User user) {
+        LinkedHashMap<Long, PlatGroup> map = new LinkedHashMap<>();
+        platGroupRepository.findByOwnerUserId(user.getUserid()).forEach(g -> map.put(g.getId(), g));
+        for (String managedId : adminAuthService.getManagedGroupIds(user)) {
+            findSpaceGroup(managedId).ifPresent(g -> map.putIfAbsent(g.getId(), g));
+        }
+        return map.values().stream().map(g -> {
+            ensureSpaceOwnerAdmin(g);
+            Map<String, Object> item = buildLegacyGroupDetail(g);
+            item.put("pendingRequestCount",
+                    platGroupMemberRepository.findByGroupIdAndStatusOrderByJoinedAtAsc(g.getId(), "pending").size());
+            String tableRole = adminAuthService.getGroupRole(user, String.valueOf(g.getId()));
+            String norm = tableRole != null ? tableRole : GroupAdminRoleConstants.OWNER;
+            item.put("userRole", norm);
+            item.put("userRoleName", GroupAdminRoleConstants.displayName(norm));
+            item.put("userPermissions", buildGroupPermissions(norm));
+            item.put("regulatingAsPlatformAdmin", false);
+            return item;
+        }).collect(Collectors.toList());
+    }
+
+    private Map<String, Object> approveSpaceJoinRequest(String id, Long requestId) {
+        PlatGroup space = findSpaceGroup(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        PlatGroupMember target = platGroupMemberRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        if (!space.getId().equals(target.getGroupId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "申请与团体不匹配");
+        }
+        if (!"pending".equals(target.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "该申请已处理");
+        }
+        target.setStatus("approved");
+        target.setJoinedAt(LocalDateTime.now());
+        target.setUpdatedAt(LocalDateTime.now());
+        platGroupMemberRepository.save(target);
+        space.setMemberCount((space.getMemberCount() == null ? 0 : space.getMemberCount()) + 1);
+        platGroupRepository.save(space);
+        notificationService.createNotification(
+                target.getUserId(),
+                NotificationCatalog.TYPE_GROUP_APPLICATION_APPROVED,
+                "你的团体加入申请已通过",
+                "你加入「" + space.getName() + "」的申请已通过",
+                "/platform/groups/" + space.getId(),
+                "platform_group",
+                String.valueOf(space.getId()));
+        return Map.of("id", requestId, "status", "approved", "message", "已通过申请");
+    }
+
+    private Map<String, Object> rejectSpaceJoinRequest(String id, Long requestId) {
+        PlatGroup space = findSpaceGroup(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        PlatGroupMember target = platGroupMemberRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "申请不存在"));
+        if (!space.getId().equals(target.getGroupId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "申请与团体不匹配");
+        }
+        if (!"pending".equals(target.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "该申请已处理");
+        }
+        target.setStatus("rejected");
+        target.setUpdatedAt(LocalDateTime.now());
+        platGroupMemberRepository.save(target);
+        notificationService.createNotification(
+                target.getUserId(),
+                NotificationCatalog.TYPE_GROUP_APPLICATION_REJECTED,
+                "你的团体加入申请未通过",
+                "你加入「" + space.getName() + "」的申请未通过",
+                "/platform/groups/" + space.getId(),
+                "platform_group",
+                String.valueOf(space.getId()));
+        return Map.of("id", requestId, "status", "rejected", "message", "已拒绝申请");
+    }
+
+    private Map<String, Object> removeSpaceMember(String id, Long userId) {
+        PlatGroup space = findSpaceGroup(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+        PlatGroupMember target = platGroupMemberRepository.findByGroupIdAndUserId(space.getId(), userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "该用户不是团体成员"));
+        if ("owner".equals(target.getRole())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "不能移除团体拥有者");
+        }
+        if ("approved".equals(target.getStatus())) {
+            int count = space.getMemberCount() == null ? 0 : space.getMemberCount();
+            space.setMemberCount(Math.max(0, count - 1));
+            platGroupRepository.save(space);
+        }
+        target.setStatus("removed");
+        target.setUpdatedAt(LocalDateTime.now());
+        platGroupMemberRepository.save(target);
+        return Map.of("userId", userId, "message", "成员已移除");
     }
 
     private Map<String, Object> attachAdminViewerMeta(Map<String, Object> item, User user, String id) {

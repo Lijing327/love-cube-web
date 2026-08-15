@@ -18,6 +18,8 @@ public interface PlatGroupRepository extends JpaRepository<PlatGroup, Long> {
 
     Optional<PlatGroup> findByInviteCode(String inviteCode);
 
+    List<PlatGroup> findByOwnerUserId(Long ownerUserId);
+
     boolean existsByInviteCode(String inviteCode);
 
     long countByStatus(String status);

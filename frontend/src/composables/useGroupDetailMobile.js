@@ -21,6 +21,9 @@ import {
   fetchGroupActivities,
   fetchGroupDetail,
   fetchGroupMembers,
+  fetchGroupArticles,
+  createGroupArticle,
+  deleteGroupArticle,
   fetchGroupNotices,
   fetchGroupPoll,
   fetchGroupPolls,
@@ -99,6 +102,11 @@ export function useGroupDetailMobile() {
   const rawPosts = ref([])
   const rawMembers = ref([])
   const rawNotices = ref([])
+  const rawArticles = ref([])
+  const articleForm = reactive({ title: '', content: '' })
+  const publishingArticle = ref(false)
+  const expandedArticleId = ref(null)
+  const deletingArticleId = ref(null)
   const todayTasks = ref([])
   const activities = ref([])
   const upcomingActivities = ref([])
@@ -192,6 +200,7 @@ export function useGroupDetailMobile() {
     if (p.endsWith('/posts')) return 'posts'
     if (p.endsWith('/members')) return 'members'
     if (p.endsWith('/notices')) return 'notices'
+    if (p.endsWith('/articles')) return 'articles'
     if (p.endsWith('/checkin')) return 'checkin'
     if (p.endsWith('/tasks')) return 'tasks'
     if (p.endsWith('/activities')) return 'activities'
@@ -214,6 +223,7 @@ export function useGroupDetailMobile() {
       { key: 'tasks', label: '任务', to: groupTabPath('tasks') },
       { key: 'activities', label: '活动', to: groupTabPath('activities') },
       { key: 'members', label: '成员', to: groupTabPath('members') },
+      { key: 'articles', label: '文章', to: groupTabPath('articles') },
       { key: 'notices', label: '公告', to: groupTabPath('notices') },
       { key: 'profile', label: '资料', to: groupTabPath('profile') }
     ]
@@ -278,6 +288,7 @@ export function useGroupDetailMobile() {
   const posts = computed(() => rawPosts.value.map(normalizePost))
   const members = computed(() => rawMembers.value.map(normalizeMember))
   const notices = computed(() => rawNotices.value.map(normalizeNotice))
+  const articles = computed(() => rawArticles.value.map(normalizeArticle))
   const claimableCount = computed(() => todayTasks.value.filter(t => t.completed && !t.claimed).length)
 
   const currentUserIdNum = computed(() => Number(userStore.userInfo?.id || userStore.userId || 0))
@@ -463,6 +474,19 @@ export function useGroupDetailMobile() {
     return group.value?.managed && member.status === 'approved' && member.role !== 'owner'
   }
 
+  function normalizeArticle(item) {
+    return {
+      id: item.id,
+      title: item.title || '未命名文章',
+      summary: item.summary || '',
+      content: item.content || '',
+      coverUrl: item.coverUrl || '',
+      authorUserId: item.authorUserId,
+      author: item.authorName || '成员',
+      date: formatDate(item.createdAt)
+    }
+  }
+
   function normalizeNotice(item) {
     return {
       id: item.id,
@@ -561,6 +585,58 @@ export function useGroupDetailMobile() {
     } catch {
       rawNotices.value = []
     }
+  }
+
+  async function loadArticles() {
+    if (!group.value?.id) return
+    try {
+      rawArticles.value = unwrapList(await fetchGroupArticles(group.value.id))
+    } catch {
+      rawArticles.value = []
+    }
+  }
+
+  async function submitArticle() {
+    const title = articleForm.title.trim()
+    const content = articleForm.content.trim()
+    if (!title || !content || publishingArticle.value) return
+    publishingArticle.value = true
+    try {
+      await createGroupArticle(group.value.id, { title, content })
+      articleForm.title = ''
+      articleForm.content = ''
+      await loadArticles()
+      flash('文章已发布')
+    } catch (e) {
+      flash(e.message || '发布失败', 'error')
+    } finally {
+      publishingArticle.value = false
+    }
+  }
+
+  function canDeleteArticle(item) {
+    if (!item) return false
+    if (group.value?.managed || group.value?.isOwner) return true
+    return Number(item.authorUserId) === currentUserIdNum.value
+  }
+
+  async function removeArticle(item) {
+    if (!canDeleteArticle(item)) return
+    if (!window.confirm(`确定删除文章「${item.title}」？`)) return
+    deletingArticleId.value = item.id
+    try {
+      await deleteGroupArticle(group.value.id, item.id)
+      await loadArticles()
+      flash('文章已删除')
+    } catch (e) {
+      flash(e.message || '删除失败', 'error')
+    } finally {
+      deletingArticleId.value = null
+    }
+  }
+
+  function toggleArticle(id) {
+    expandedArticleId.value = expandedArticleId.value === id ? null : id
   }
 
   async function loadCheckinSummary() {
@@ -1179,6 +1255,7 @@ export function useGroupDetailMobile() {
       loadPosts(),
       loadMembers(),
       loadNotices(),
+      loadArticles(),
       loadCheckinSummary(),
       loadTodayTasks(),
       loadUpcomingActivities(),
@@ -1448,6 +1525,15 @@ export function useGroupDetailMobile() {
     posts,
     members,
     notices,
+    articles,
+    articleForm,
+    publishingArticle,
+    expandedArticleId,
+    deletingArticleId,
+    submitArticle,
+    canDeleteArticle,
+    removeArticle,
+    toggleArticle,
     activities,
     upcomingActivities,
     polls,

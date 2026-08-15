@@ -87,6 +87,7 @@ export default {
     { path: 'platform/groups/:id/members', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
     { path: 'platform/groups/:id/posts', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
     { path: 'platform/groups/:id/notices', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
+    { path: 'platform/groups/:id/articles', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
     { path: 'platform/groups/:id/profile', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
     { path: 'platform/groups/:id/checkin', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },
     { path: 'platform/groups/:id/tasks', component: () => import('@/pages/platform/GroupDetailPage.vue'), meta: { module: 'platform' } },

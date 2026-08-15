@@ -4,6 +4,7 @@ import com.lovecube.backend.entity.GroupJoinRequest;
 import com.lovecube.backend.entity.GroupMember;
 import com.lovecube.backend.entity.GroupPost;
 import com.lovecube.backend.entity.PlatGroup;
+import com.lovecube.backend.entity.PlatGroupMember;
 import com.lovecube.backend.entity.PlatformGroup;
 import com.lovecube.backend.entity.PlatformGroupAdmin;
 import com.lovecube.backend.models.User;
@@ -155,24 +156,16 @@ public class AdminGroupController {
             @PathVariable String id
     ) {
         User user = adminAuthService.requireUser(authHeader);
-        PlatformGroup g = groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
-        adminAuthService.requireGroupAdmin(authHeader, id);
-        Map<String, Object> item = buildGroupDetail(g);
-        String tableRole = adminAuthService.getGroupRole(user, id);
-        if (tableRole == null && adminAuthService.hasGroupManageAll(user)) {
-            item.put("userRole", null);
-            item.put("userRoleName", "平台监管");
-            item.put("userPermissions", buildGroupPermissions(GroupAdminRoleConstants.OWNER));
-            item.put("regulatingAsPlatformAdmin", true);
-        } else {
-            String norm = tableRole != null ? tableRole : GroupAdminRoleConstants.OWNER;
-            item.put("userRole", norm);
-            item.put("userRoleName", GroupAdminRoleConstants.displayName(norm));
-            item.put("userPermissions", buildGroupPermissions(norm));
-            item.put("regulatingAsPlatformAdmin", false);
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        Optional<PlatGroup> space = modern.isEmpty() ? findSpaceGroup(id) : Optional.empty();
+        if (modern.isEmpty() && space.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在");
         }
-        return item;
+        adminAuthService.requireGroupAdmin(authHeader, id);
+        Map<String, Object> item = modern.isPresent()
+                ? buildGroupDetail(modern.get())
+                : buildLegacyGroupDetail(space.get());
+        return attachAdminViewerMeta(item, user, id);
     }
 
     // ── 团体 CRUD ──────────────────────────────────────────────────────────────
@@ -219,26 +212,33 @@ public class AdminGroupController {
 
     /** OWNER / ADMIN 可编辑团体资料 */
     @PutMapping("/{id}")
-    public PlatformGroup updateGroup(
+    public Map<String, Object> updateGroup(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable String id,
             @RequestBody Map<String, Object> payload
     ) {
         adminAuthService.requireGroupManagePermission(authHeader, id);
-        PlatformGroup group = groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
-        if (payload.containsKey("name")) {
-            String name = String.valueOf(payload.get("name")).trim();
-            if (!name.isBlank()) group.setName(name);
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        if (modern.isPresent()) {
+            PlatformGroup group = modern.get();
+            if (payload.containsKey("name")) {
+                String name = String.valueOf(payload.get("name")).trim();
+                if (!name.isBlank()) group.setName(name);
+            }
+            if (payload.containsKey("description")) group.setDescription(String.valueOf(payload.get("description")));
+            if (payload.containsKey("category"))    group.setCategory(String.valueOf(payload.get("category")));
+            if (payload.containsKey("coverUrl"))    group.setCoverUrl(String.valueOf(payload.get("coverUrl")));
+            if (payload.containsKey("status"))      group.setStatus(String.valueOf(payload.get("status")));
+            if (payload.containsKey("joinType"))    group.setJoinType(String.valueOf(payload.get("joinType")));
+            if (payload.containsKey("pinned"))      group.setPinned(Boolean.parseBoolean(String.valueOf(payload.get("pinned"))));
+            group.setUpdatedAt(LocalDateTime.now());
+            return buildGroupDetail(groupRepository.save(group));
         }
-        if (payload.containsKey("description")) group.setDescription(String.valueOf(payload.get("description")));
-        if (payload.containsKey("category"))    group.setCategory(String.valueOf(payload.get("category")));
-        if (payload.containsKey("coverUrl"))    group.setCoverUrl(String.valueOf(payload.get("coverUrl")));
-        if (payload.containsKey("status"))      group.setStatus(String.valueOf(payload.get("status")));
-        if (payload.containsKey("joinType"))    group.setJoinType(String.valueOf(payload.get("joinType")));
-        if (payload.containsKey("pinned"))      group.setPinned(Boolean.parseBoolean(String.valueOf(payload.get("pinned"))));
-        group.setUpdatedAt(LocalDateTime.now());
-        return groupRepository.save(group);
+        PlatGroup space = findSpaceGroup(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+        applySpaceGroupUpdates(space, payload);
+        space.setUpdatedAt(LocalDateTime.now());
+        return buildLegacyGroupDetail(platGroupRepository.save(space));
     }
 
     /** SUPER_ADMIN 或 OWNER 可删除 */
@@ -249,14 +249,22 @@ public class AdminGroupController {
             @PathVariable String id
     ) {
         adminAuthService.requireGroupOwnerOrSuperAdmin(authHeader, id);
-        groupRepository.findById(id)
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        if (modern.isPresent()) {
+            String canonicalId = modern.get().getId();
+            memberRepository.findByGroupIdOrderByJoinedAtAsc(canonicalId).forEach(memberRepository::delete);
+            postRepository.findByGroupIdOrderByCreatedAtDesc(canonicalId).forEach(postRepository::delete);
+            joinRequestRepository.findByGroupIdOrderByRequestedAtDesc(canonicalId).forEach(joinRequestRepository::delete);
+            groupAdminRepository.findByGroupId(canonicalId).forEach(groupAdminRepository::delete);
+            groupRepository.deleteById(canonicalId);
+            return Map.of("id", canonicalId, "message", "团体已删除");
+        }
+        PlatGroup space = findSpaceGroup(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
-        memberRepository.findByGroupIdOrderByJoinedAtAsc(id).forEach(memberRepository::delete);
-        postRepository.findByGroupIdOrderByCreatedAtDesc(id).forEach(postRepository::delete);
-        joinRequestRepository.findByGroupIdOrderByRequestedAtDesc(id).forEach(joinRequestRepository::delete);
-        groupAdminRepository.findByGroupId(id).forEach(groupAdminRepository::delete);
-        groupRepository.deleteById(id);
-        return Map.of("id", id, "message", "团体已删除");
+        platGroupMemberRepository.findByGroupIdOrderByJoinedAtAsc(space.getId())
+                .forEach(platGroupMemberRepository::delete);
+        platGroupRepository.delete(space);
+        return Map.of("id", String.valueOf(space.getId()), "message", "团体已删除");
     }
 
     // ── 入团申请（OWNER / ADMIN / REVIEWER） ──────────────────────────────────
@@ -268,9 +276,12 @@ public class AdminGroupController {
             @RequestParam(defaultValue = "pending") String status
     ) {
         adminAuthService.requireGroupReviewPermission(authHeader, id);
-        String canonicalId = adminAuthService.resolvePlatformGroupIdOrThrow(id);
-        groupRepository.findById(canonicalId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        if (modern.isEmpty()) {
+            PlatGroup space = findSpaceGroup(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+            return buildSpaceJoinRequests(space, status);
+        }
         LinkedHashSet<Long> seen = new LinkedHashSet<>();
         List<GroupJoinRequest> requests = new ArrayList<>();
         for (String gid : adminAuthService.expandGroupIdAliasesForLegacy(id)) {
@@ -365,9 +376,14 @@ public class AdminGroupController {
             @PathVariable String id
     ) {
         adminAuthService.requireGroupManagePermission(authHeader, id);
-        groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
-        List<GroupMember> members = memberRepository.findByGroupIdOrderByJoinedAtAsc(id);
+        Optional<PlatformGroup> modern = findModernGroup(id);
+        if (modern.isEmpty()) {
+            PlatGroup space = findSpaceGroup(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "团体不存在"));
+            return buildSpaceMembers(space);
+        }
+        String canonicalId = modern.get().getId();
+        List<GroupMember> members = memberRepository.findByGroupIdOrderByJoinedAtAsc(canonicalId);
         Set<Long> uids = members.stream().map(GroupMember::getUserId).collect(Collectors.toSet());
         Map<Long, User> userMap = userRepository.findAllById(uids).stream()
                 .collect(Collectors.toMap(User::getUserid, u -> u));
@@ -534,6 +550,137 @@ public class AdminGroupController {
 
     // ── 私有工具 ──────────────────────────────────────────────────────────────
 
+    private Optional<PlatformGroup> findModernGroup(String id) {
+        for (String gid : adminAuthService.expandGroupIdAliasesForLegacy(id)) {
+            Optional<PlatformGroup> found = groupRepository.findById(gid);
+            if (found.isPresent()) {
+                return found;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<PlatGroup> findSpaceGroup(String id) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        String raw = id.startsWith("legacy-") ? id.substring("legacy-".length()) : id;
+        if (raw.isEmpty() || !raw.chars().allMatch(Character::isDigit)) {
+            return Optional.empty();
+        }
+        try {
+            return platGroupRepository.findById(Long.parseLong(raw));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private Map<String, Object> attachAdminViewerMeta(Map<String, Object> item, User user, String id) {
+        String tableRole = adminAuthService.getGroupRole(user, id);
+        if (tableRole == null && adminAuthService.hasGroupManageAll(user)) {
+            item.put("userRole", null);
+            item.put("userRoleName", "平台监管");
+            item.put("userPermissions", buildGroupPermissions(GroupAdminRoleConstants.OWNER));
+            item.put("regulatingAsPlatformAdmin", true);
+        } else {
+            String norm = tableRole != null ? tableRole : GroupAdminRoleConstants.OWNER;
+            item.put("userRole", norm);
+            item.put("userRoleName", GroupAdminRoleConstants.displayName(norm));
+            item.put("userPermissions", buildGroupPermissions(norm));
+            item.put("regulatingAsPlatformAdmin", false);
+        }
+        return item;
+    }
+
+    private void applySpaceGroupUpdates(PlatGroup group, Map<String, Object> payload) {
+        if (payload.containsKey("name")) {
+            String name = String.valueOf(payload.get("name")).trim();
+            if (!name.isBlank()) group.setName(name);
+        }
+        if (payload.containsKey("description")) {
+            group.setDescription(String.valueOf(payload.get("description")));
+        }
+        if (payload.containsKey("category")) {
+            group.setType(String.valueOf(payload.get("category")));
+        }
+        if (payload.containsKey("coverUrl")) {
+            group.setCoverUrl(String.valueOf(payload.get("coverUrl")));
+        }
+        if (payload.containsKey("region")) {
+            group.setRegion(String.valueOf(payload.get("region")));
+        }
+        if (payload.containsKey("status")) {
+            String status = String.valueOf(payload.get("status")).trim();
+            if ("active".equals(status) || "published".equals(status)) {
+                group.setStatus("published");
+            } else if ("inactive".equals(status) || "disabled".equals(status)) {
+                group.setStatus("disabled");
+            } else if (!status.isBlank()) {
+                group.setStatus(status);
+            }
+        }
+        if (payload.containsKey("joinType")) {
+            String joinType = String.valueOf(payload.get("joinType")).trim().toLowerCase();
+            if ("open".equals(joinType) || "free".equals(joinType)) {
+                group.setJoinMode("free");
+            } else if ("invite".equals(joinType)) {
+                group.setJoinMode("invite");
+            } else {
+                group.setJoinMode("audit");
+            }
+        }
+    }
+
+    private List<Map<String, Object>> buildSpaceMembers(PlatGroup group) {
+        List<PlatGroupMember> members = platGroupMemberRepository
+                .findByGroupIdAndStatusOrderByJoinedAtAsc(group.getId(), "approved");
+        Set<Long> uids = members.stream().map(PlatGroupMember::getUserId).collect(Collectors.toSet());
+        Map<Long, User> userMap = userRepository.findAllById(uids).stream()
+                .collect(Collectors.toMap(User::getUserid, u -> u));
+        return members.stream().map(m -> {
+            User u = userMap.get(m.getUserId());
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", m.getId());
+            item.put("userId", m.getUserId());
+            item.put("role", m.getRole());
+            item.put("status", m.getStatus());
+            item.put("joinedAt", m.getJoinedAt());
+            item.put("username", u != null ? u.getUsername() : "");
+            item.put("avatarUrl", u != null ? u.getProfilePhoto() : "");
+            item.put("memberRealName", m.getMemberRealName());
+            return item;
+        }).collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> buildSpaceJoinRequests(PlatGroup group, String status) {
+        String queryStatus = (status == null || status.isBlank() || "all".equals(status)) ? null : status;
+        List<PlatGroupMember> members = queryStatus == null
+                ? platGroupMemberRepository.findByGroupIdOrderByJoinedAtAsc(group.getId())
+                : platGroupMemberRepository.findByGroupIdAndStatusOrderByJoinedAtAsc(group.getId(), queryStatus);
+        if (queryStatus == null) {
+            members = members.stream()
+                    .filter(m -> !"approved".equals(m.getStatus()))
+                    .collect(Collectors.toList());
+        }
+        Set<Long> uids = members.stream().map(PlatGroupMember::getUserId).collect(Collectors.toSet());
+        Map<Long, User> userMap = userRepository.findAllById(uids).stream()
+                .collect(Collectors.toMap(User::getUserid, u -> u));
+        return members.stream().map(m -> {
+            User u = userMap.get(m.getUserId());
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", m.getId());
+            item.put("userId", m.getUserId());
+            item.put("status", m.getStatus());
+            item.put("message", m.getApplyReason());
+            item.put("requestedAt", m.getCreatedAt());
+            item.put("handledAt", m.getUpdatedAt());
+            item.put("username", u != null ? u.getUsername() : "");
+            item.put("avatarUrl", u != null ? u.getProfilePhoto() : "");
+            item.put("memberRealName", m.getMemberRealName());
+            return item;
+        }).collect(Collectors.toList());
+    }
+
     private Map<String, Object> buildGroupDetail(PlatformGroup g) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", g.getId());
@@ -558,6 +705,7 @@ public class AdminGroupController {
         item.put("name", g.getName());
         item.put("description", g.getDescription());
         item.put("category", g.getType());
+        item.put("region", g.getRegion());
         item.put("coverUrl", g.getCoverUrl());
         item.put("status", "published".equals(g.getStatus()) ? "active" : g.getStatus());
         item.put("joinType", "free".equals(g.getJoinMode()) ? "open" : "approval");

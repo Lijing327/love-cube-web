@@ -293,6 +293,25 @@
                   </div>
                 </section>
 
+                <!-- 团体文章 -->
+                <section class="panel-card">
+                  <div class="section-head">
+                    <h2>团体文章</h2>
+                    <button type="button" class="text-link-btn" @click="goToTab('articles')">查看全部</button>
+                  </div>
+                  <p class="home-guide-text">
+                    {{ articles.length ? '成员分享的长文都在这里' : '还没有文章，加入后可以写第一篇' }}
+                  </p>
+                  <div v-if="errors.articles" class="inline-error">{{ errors.articles }}</div>
+                  <div v-else-if="articles.slice(0, 2).length" class="home-notice-list">
+                    <article v-for="article in articles.slice(0, 2)" :key="article.id" class="notice-card compact">
+                      <strong>{{ article.title }}</strong>
+                      <p>{{ article.summary || article.content }}</p>
+                      <time>{{ article.author }} · {{ article.date }}</time>
+                    </article>
+                  </div>
+                </section>
+
                 <!-- 团体公告 -->
                 <section class="panel-card">
                   <div class="section-head">
@@ -464,10 +483,51 @@
             <div v-else class="empty-inline">暂无成员</div>
           </section>
 
+          <section v-else-if="activeTab === 'articles'" class="panel-card">
+            <div class="section-head">
+              <h2>团体文章</h2>
+            </div>
+            <template v-if="group.isMember">
+              <form class="post-form" @submit.prevent="submitArticle">
+                <input v-model.trim="articleForm.title" type="text" maxlength="200" placeholder="文章标题" required>
+                <textarea v-model.trim="articleForm.content" rows="8" maxlength="20000" placeholder="写下正文，适合分享经验、故事或共读笔记"></textarea>
+                <input v-model.trim="articleForm.coverUrl" type="text" placeholder="封面图 URL（可选）">
+                <div class="post-form-foot">
+                  <span>加入成员可发布，作者或管理员可删除</span>
+                  <button type="submit" class="primary-btn" :disabled="publishingArticle || contentCheck.state.checking">
+                    {{ publishingArticle ? '发布中...' : '发布文章' }}
+                  </button>
+                </div>
+              </form>
+            </template>
+            <p v-else class="join-hint">加入团体后可以发布文章。</p>
+            <p v-if="errors.articles" class="inline-error">{{ errors.articles }}</p>
+            <div v-else-if="articles.length" class="notice-list">
+              <article v-for="article in articles" :key="article.id" class="notice-card">
+                <button type="button" @click="toggleArticle(article.id)">
+                  <span>{{ article.title }}</span>
+                  <time>{{ article.author }} · {{ article.date }}</time>
+                </button>
+                <p v-if="expandedArticleId !== article.id">{{ article.summary || article.content }}</p>
+                <div v-else class="article-full">
+                  <img v-if="article.coverUrl" :src="article.coverUrl" alt="" class="article-cover">
+                  <p class="article-body">{{ article.content }}</p>
+                  <button
+                    v-if="canDeleteArticle(article)"
+                    type="button"
+                    class="text-link-btn"
+                    :disabled="deletingArticleId === article.id"
+                    @click="removeArticle(article)"
+                  >删除</button>
+                </div>
+              </article>
+            </div>
+            <div v-else class="empty-inline">暂无文章</div>
+          </section>
+
           <section v-else-if="activeTab === 'notices'" class="panel-card">
             <div class="section-head">
               <h2>团体公告</h2>
-              <button type="button" class="primary-btn small">发布公告</button>
             </div>
             <div v-if="errors.notices" class="inline-error">{{ errors.notices }}</div>
             <div v-else-if="notices.length" class="notice-list">
@@ -1048,6 +1108,9 @@ import {
   deletePlatformGroupPostComment,
   fetchGroupDetail,
   fetchGroupMembers,
+  fetchGroupArticles,
+  createGroupArticle,
+  deleteGroupArticle,
   fetchGroupNotices,
   fetchGroupPostComments,
   fetchGroupPosts,
@@ -1165,6 +1228,11 @@ const spaceManageMembersEntry = computed(() => {
 const rawMembers = ref([])
 const rawPosts = ref([])
 const rawNotices = ref([])
+const rawArticles = ref([])
+const expandedArticleId = ref(null)
+const articleForm = reactive({ title: '', content: '', coverUrl: '' })
+const publishingArticle = ref(false)
+const deletingArticleId = ref(null)
 const memberKeyword = ref('')
 const roleFilter = ref('')
 const expandedNoticeId = ref(null)
@@ -1176,8 +1244,8 @@ const roleChangingMemberId = ref(null)
 const message = ref('')
 const messageType = ref('success')
 
-const loading = reactive({ detail: false, members: false, posts: false, notices: false, checkin: false, tasks: false, activities: false, polls: false })
-const errors = reactive({ detail: '', members: '', posts: '', notices: '' })
+const loading = reactive({ detail: false, members: false, posts: false, notices: false, articles: false, checkin: false, tasks: false, activities: false, polls: false })
+const errors = reactive({ detail: '', members: '', posts: '', notices: '', articles: '' })
 
 // 打卡
 const checkinSummary = reactive({ checkedInToday: false, todayCount: 0, myStreakDays: 0, recentCheckins: [] })
@@ -1267,6 +1335,7 @@ const activeTab = computed(() => {
   if (route.path.endsWith('/posts')) return 'posts'
   if (route.path.endsWith('/members')) return 'members'
   if (route.path.endsWith('/notices')) return 'notices'
+  if (route.path.endsWith('/articles')) return 'articles'
   if (route.path.endsWith('/profile')) return 'profile'
   if (route.path.endsWith('/checkin')) return 'checkin'
   if (route.path.endsWith('/tasks')) return 'tasks'
@@ -1289,6 +1358,7 @@ const tabs = computed(() => {
   }
   rows.push(
     { key: 'members', label: '成员', to: groupTabPath('members') },
+    { key: 'articles', label: '文章', to: groupTabPath('articles') },
     { key: 'notices', label: '公告', to: groupTabPath('notices') },
     { key: 'profile', label: '资料', to: groupTabPath('profile') }
   )
@@ -1357,6 +1427,7 @@ const joinButtonText = computed(() => {
 const admins = computed(() => normalizeAdmins(group.value?.admins || []))
 const posts = computed(() => rawPosts.value.map(normalizePost))
 const notices = computed(() => rawNotices.value.map(normalizeNotice))
+const articles = computed(() => rawArticles.value.map(normalizeArticle))
 const members = computed(() => rawMembers.value.map(normalizeMember))
 
 const filteredMembers = computed(() => {
@@ -1485,12 +1556,79 @@ async function loadNotices() {
   }
 }
 
+async function loadArticles() {
+  loading.articles = true
+  errors.articles = ''
+  try {
+    rawArticles.value = unwrapList(await fetchGroupArticles(group.value.id))
+  } catch (error) {
+    rawArticles.value = []
+    errors.articles = error.message || '文章接口加载失败'
+  } finally {
+    loading.articles = false
+  }
+}
+
+async function submitArticle() {
+  const title = articleForm.title.trim()
+  const content = articleForm.content.trim()
+  if (!title || !content) {
+    flashMessage('请填写文章标题和正文', 'error')
+    return
+  }
+  const checkResult = await contentCheck.check(`${title}\n${content}`, 'group-article')
+  if (!checkResult.ok) return
+  publishingArticle.value = true
+  try {
+    await createGroupArticle(group.value.id, {
+      title,
+      content,
+      coverUrl: articleForm.coverUrl.trim() || undefined
+    })
+    articleForm.title = ''
+    articleForm.content = ''
+    articleForm.coverUrl = ''
+    await loadArticles()
+    flashMessage('文章已发布')
+  } catch (error) {
+    flashMessage(error.message || '文章发布失败', 'error')
+  } finally {
+    publishingArticle.value = false
+  }
+}
+
+function canDeleteArticle(item) {
+  if (!item) return false
+  if (group.value?.managed || group.value?.isOwner) return true
+  return Number(item.authorUserId) === currentUserIdNum.value
+}
+
+async function removeArticle(item) {
+  if (!canDeleteArticle(item)) return
+  if (!window.confirm(`确定删除文章「${item.title}」？`)) return
+  deletingArticleId.value = item.id
+  try {
+    await deleteGroupArticle(group.value.id, item.id)
+    await loadArticles()
+    flashMessage('文章已删除')
+  } catch (error) {
+    flashMessage(error.message || '删除失败', 'error')
+  } finally {
+    deletingArticleId.value = null
+  }
+}
+
+function toggleArticle(id) {
+  expandedArticleId.value = expandedArticleId.value === id ? null : id
+}
+
 async function loadRelatedData() {
   if (!group.value?.id) return
   await Promise.all([
     loadMembers(),
     loadPosts(),
     loadNotices(),
+    loadArticles(),
     loadActivitiesForHome(),
     loadCheckinSummary(),
     loadTodayTasks(),
@@ -2556,6 +2694,19 @@ function normalizeNotice(item) {
   }
 }
 
+function normalizeArticle(item) {
+  return {
+    id: item.id,
+    title: item.title || '未命名文章',
+    summary: item.summary || '',
+    content: item.content || '',
+    coverUrl: item.coverUrl || '',
+    authorUserId: item.authorUserId,
+    author: item.authorName || '成员',
+    date: formatDate(item.createdAt)
+  }
+}
+
 function normalizeMember(item) {
   const role = item.role || 'member'
   const status = item.status || 'approved'
@@ -3166,6 +3317,25 @@ onMounted(async () => {
 .notice-card time {
   color: var(--lc-subtle);
   font-size: var(--lc-text-xs);
+}
+
+.article-full {
+  display: grid;
+  gap: var(--lc-space-3);
+  margin-top: var(--lc-space-3);
+}
+
+.article-cover {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--lc-radius-xs);
+  border: 1px solid var(--lc-border);
+}
+
+.article-body {
+  white-space: pre-wrap;
+  color: var(--lc-text);
 }
 
 .empty-inline,

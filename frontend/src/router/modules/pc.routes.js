@@ -140,6 +140,11 @@ export default {
       meta: { module: 'platform' }
     },
     {
+      path: 'platform/groups/:id/articles',
+      component: () => import('@/pages/pc/platform/GroupDetailPage.vue'),
+      meta: { module: 'platform' }
+    },
+    {
       path: 'platform/groups/:id/profile',
       component: () => import('@/pages/pc/platform/GroupDetailPage.vue'),
       meta: { module: 'platform' }

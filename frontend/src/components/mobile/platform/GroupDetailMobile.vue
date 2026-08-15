@@ -107,6 +107,11 @@
           </p>
           <router-link :to="groupTabPath('tasks')" class="gd-link">查看任务 →</router-link>
         </article>
+        <article v-if="articles.length" class="gd-card">
+          <h2>最新文章</h2>
+          <p class="gd-notice-title">{{ articles[0].title }}</p>
+          <router-link :to="groupTabPath('articles')" class="gd-link">全部文章 →</router-link>
+        </article>
         <article v-if="notices.length" class="gd-card">
           <h2>最新公告</h2>
           <p class="gd-notice-title">{{ notices[0].title }}</p>
@@ -357,6 +362,33 @@
           </div>
         </article>
         <p v-if="!loading.members && !members.length" class="gd-state">暂无成员</p>
+      </div>
+
+      <!-- 文章 -->
+      <div v-else-if="activeTab === 'articles'" class="gd-panel">
+        <form v-if="group.isMember" class="gd-compose" @submit.prevent="submitArticle">
+          <input v-model.trim="articleForm.title" type="text" maxlength="200" placeholder="文章标题" required>
+          <textarea v-model.trim="articleForm.content" rows="6" maxlength="20000" placeholder="写下正文…" />
+          <button type="submit" class="gd-btn primary" :disabled="publishingArticle || !articleForm.title.trim() || !articleForm.content.trim()">
+            {{ publishingArticle ? '发布中…' : '发布文章' }}
+          </button>
+        </form>
+        <p v-else class="gd-state">加入团体后可以发布文章</p>
+        <article v-for="a in articles" :key="a.id" class="gd-notice">
+          <button type="button" class="gd-article-toggle" @click="toggleArticle(a.id)">
+            <h3>{{ a.title }}</h3>
+            <time>{{ a.author }} · {{ a.date }}</time>
+          </button>
+          <p>{{ expandedArticleId === a.id ? a.content : (a.summary || a.content) }}</p>
+          <button
+            v-if="expandedArticleId === a.id && canDeleteArticle(a)"
+            type="button"
+            class="gd-btn sm danger"
+            :disabled="deletingArticleId === a.id"
+            @click="removeArticle(a)"
+          >删除</button>
+        </article>
+        <p v-if="!articles.length" class="gd-state">暂无文章</p>
       </div>
 
       <!-- 公告 -->
@@ -679,6 +711,15 @@ const {
   posts,
   members,
   notices,
+  articles,
+  articleForm,
+  publishingArticle,
+  expandedArticleId,
+  deletingArticleId,
+  submitArticle,
+  canDeleteArticle,
+  removeArticle,
+  toggleArticle,
   upcomingActivities,
   activities,
   polls,
@@ -1074,6 +1115,7 @@ const {
   margin-bottom: 12px;
 }
 
+.gd-compose input,
 .gd-compose textarea,
 .gd-compose select {
   width: 100%;
@@ -1290,6 +1332,19 @@ const {
 .gd-notice time {
   font-size: 11px;
   color: #94a3b8;
+}
+
+.gd-article-toggle {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 
 .gd-profile {

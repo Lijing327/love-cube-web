@@ -498,6 +498,23 @@ public class PlatformGroupController {
         return Map.of("id", saved.getId(), "slug", saved.getSlug(), "message", "Created successfully");
     }
 
+    @DeleteMapping("/{id}")
+    @Transactional
+    public Map<String, Object> deleteGroup(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+        User user = adminAuthService.requireUser(authHeader);
+        PlatGroup group = groupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+        boolean owner = user.getUserid().equals(group.getOwnerUserId()) || adminAuthService.isAdmin(user);
+        if (!owner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No permission");
+        }
+        memberRepository.findByGroupIdOrderByJoinedAtAsc(id).forEach(memberRepository::delete);
+        groupRepository.delete(group);
+        return Map.of("id", id, "message", "团体已删除");
+    }
+
 
     @PutMapping("/{id}")
     @Transactional

@@ -31,19 +31,77 @@ export function unwrapPlatformGroupList(res) {
   return []
 }
 
-/** 团体大厅列表（platform_groups + 分页结构） */
+function groupCreatedAtMs(item) {
+  const raw = item?.createdAt
+  if (!raw) return 0
+  if (Array.isArray(raw) && raw.length >= 3) {
+    const [y, mo, d, h = 0, mi = 0, s = 0] = raw
+    const t = Date.UTC(y, (mo || 1) - 1, d || 1, h, mi, s)
+    return Number.isFinite(t) ? t : 0
+  }
+  const t = new Date(raw).getTime()
+  return Number.isFinite(t) ? t : 0
+}
+
+function mergePlatformGroupLists(modernItems, spaceItems) {
+  const seen = new Set()
+  const out = []
+  for (const item of modernItems) {
+    const id = String(item?.id ?? '')
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    seen.add(`legacy-${id}`)
+    out.push(item)
+  }
+  for (const item of spaceItems) {
+    const id = String(item?.id ?? '')
+    if (!id || seen.has(id) || seen.has(`legacy-${id}`)) continue
+    seen.add(id)
+    out.push(item)
+  }
+  return out
+}
+
+function sortMergedGroups(items, sort) {
+  if (sort === 'newest') {
+    items.sort((a, b) => groupCreatedAtMs(b) - groupCreatedAtMs(a))
+    return
+  }
+  items.sort((a, b) => Number(b?.memberCount || 0) - Number(a?.memberCount || 0))
+}
+
+/** 团体大厅列表：合并 platform_groups 与前台创建用的 platform_group，避免只出现在后台 */
 export async function fetchGroups(params = {}) {
   const normalizedParams = { ...params }
-
-  // 新表接口默认按 active 查询；兼容旧表时改为 published。
   if (!normalizedParams.status) normalizedParams.status = 'active'
-  const modern = await request.get('/groups', { params: normalizedParams })
-  const modernItems = unwrapPlatformGroupList(modern)
-  if (modernItems.length > 0) return modern
 
-  const legacyParams = { ...normalizedParams }
-  if (legacyParams.status === 'active') legacyParams.status = 'published'
-  return request.get('/platform/groups', { params: legacyParams })
+  const page = Math.max(1, Number(normalizedParams.page) || 1)
+  const pageSize = Math.min(100, Math.max(1, Number(normalizedParams.pageSize) || 20))
+  const listParams = { ...normalizedParams, page: 1, pageSize: 100 }
+  const spaceParams = { ...listParams }
+  if (spaceParams.status === 'active') spaceParams.status = 'published'
+
+  const [modernRes, spaceRes] = await Promise.allSettled([
+    request.get('/groups', { params: listParams }),
+    request.get('/platform/groups', { params: spaceParams })
+  ])
+
+  if (modernRes.status === 'rejected' && spaceRes.status === 'rejected') {
+    throw modernRes.reason
+  }
+
+  const modernItems = modernRes.status === 'fulfilled' ? unwrapPlatformGroupList(modernRes.value) : []
+  const spaceItems = spaceRes.status === 'fulfilled' ? unwrapPlatformGroupList(spaceRes.value) : []
+  const merged = mergePlatformGroupLists(modernItems, spaceItems)
+  sortMergedGroups(merged, normalizedParams.sort)
+
+  const from = (page - 1) * pageSize
+  return {
+    items: merged.slice(from, from + pageSize),
+    total: merged.length,
+    page,
+    pageSize
+  }
 }
 
 export function fetchMeGroupsBuckets() {
@@ -125,8 +183,19 @@ export async function fetchGroupNotices(id) {
   })
 }
 
-export function fetchHotGroups() {
-  return request.get('/groups/hot')
+export async function fetchHotGroups() {
+  const [modernRes, spaceRes] = await Promise.allSettled([
+    request.get('/groups/hot'),
+    request.get('/platform/groups/hot')
+  ])
+  if (modernRes.status === 'rejected' && spaceRes.status === 'rejected') {
+    throw modernRes.reason
+  }
+  const modern = modernRes.status === 'fulfilled' && Array.isArray(modernRes.value) ? modernRes.value : []
+  const space = spaceRes.status === 'fulfilled' && Array.isArray(spaceRes.value) ? spaceRes.value : []
+  return mergePlatformGroupLists(modern, space)
+    .sort((a, b) => Number(b?.memberCount || 0) - Number(a?.memberCount || 0))
+    .slice(0, 8)
 }
 
 export function fetchGroupFeed() {
@@ -224,6 +293,18 @@ export function createGroupPost(id, payload) {
 
 export function createGroupNotice(id, payload) {
   return request.post(`/platform/groups/${id}/notices`, payload)
+}
+
+export function fetchGroupArticles(id) {
+  return request.get(`/groups/${id}/articles`)
+}
+
+export function createGroupArticle(id, payload) {
+  return request.post(`/groups/${id}/articles`, payload)
+}
+
+export function deleteGroupArticle(id, articleId) {
+  return request.delete(`/groups/${id}/articles/${articleId}`)
 }
 
 export function approveMember(groupId, memberId) {
@@ -454,9 +535,35 @@ export function getAdminGroups() {
   return request.get('/admin/groups')
 }
 
-/** 后台团体详情（含 userRole / userPermissions，platform_groups） */
-export function fetchAdminGroupDetail(id) {
-  return request.get(`/admin/groups/${id}`)
+/** 后台团体详情（含 userRole / userPermissions；数字 ID 兼容前台创建的 Space 团体） */
+export async function fetchAdminGroupDetail(id) {
+  try {
+    return await request.get(`/admin/groups/${id}`)
+  } catch (err) {
+    if (!isNumericPlatformGroupId(id) || !/不存在/.test(String(err?.message || ''))) {
+      throw err
+    }
+    const space = await request.get(`/platform/groups/${id}`)
+    return {
+      ...space,
+      id: space?.id ?? id,
+      category: space?.type || space?.category,
+      joinType: space?.joinType || (space?.joinMode === 'free' ? 'open' : 'approval'),
+      status: space?.status === 'published' ? 'active' : space?.status,
+      userRole: null,
+      userRoleName: '平台监管',
+      userPermissions: [
+        'group.review.member',
+        'group.edit.info',
+        'group.manage.notice',
+        'group.manage.post',
+        'group.remove.member',
+        'group.manage.admins',
+        'group.delete'
+      ],
+      regulatingAsPlatformAdmin: true
+    }
+  }
 }
 
 export function getAdminGroupDetail(id) {
@@ -468,8 +575,11 @@ export function fetchLegacyGroupDetail(id) {
   return request.get(`/groups/${id}`)
 }
 
-/** 公共 API：团体动态列表（group_posts） */
+/** 公共 API：团体动态列表（数字 ID 走 Space 表，其余走 platform_groups） */
 export function fetchLegacyGroupPosts(id) {
+  if (isNumericPlatformGroupId(id)) {
+    return request.get(`/platform/groups/${id}/posts`)
+  }
   return request.get(`/groups/${id}/posts`)
 }
 

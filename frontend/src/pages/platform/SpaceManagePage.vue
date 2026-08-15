@@ -335,6 +335,39 @@
         <p v-else class="inline-state">暂无公告，发布第一条吧</p>
       </section>
 
+      <!-- 文章 -->
+      <section v-else-if="activeTab === 'articles'" class="platform-card tab-panel">
+        <div class="section-head">
+          <h2>团体文章</h2>
+        </div>
+        <form class="inline-form" @submit.prevent="submitArticle">
+          <label class="field">
+            <span>标题</span>
+            <input v-model.trim="articleForm.title" type="text" maxlength="200" required>
+          </label>
+          <label class="field">
+            <span>正文</span>
+            <textarea v-model.trim="articleForm.content" rows="6" maxlength="20000" required />
+          </label>
+          <label class="field">
+            <span>封面 URL（可选）</span>
+            <input v-model.trim="articleForm.coverUrl" type="text" maxlength="512">
+          </label>
+          <button type="submit" class="btn primary" :disabled="saving">{{ saving ? '发布中…' : '发布文章' }}</button>
+        </form>
+        <div v-if="loadingArticles" class="inline-state">加载中…</div>
+        <div v-else-if="articles.length" class="content-list">
+          <article v-for="a in articles" :key="a.id" class="content-row">
+            <header>
+              <strong>{{ a.title }}</strong>
+              <time>{{ formatDate(a.createdAt) }}</time>
+            </header>
+            <p>{{ a.summary || a.content }}</p>
+          </article>
+        </div>
+        <p v-else class="inline-state">暂无文章，发布第一篇吧</p>
+      </section>
+
       <!-- 活动 -->
       <section v-else-if="activeTab === 'activities'" class="platform-card tab-panel">
         <div class="section-head">
@@ -476,6 +509,8 @@ import {
   approveMember,
   createGroupActivity,
   createGroupNotice,
+  createGroupArticle,
+  fetchGroupArticles,
   fetchGroupActivities,
   fetchGroupDetail,
   fetchGroupMembers,
@@ -530,6 +565,10 @@ const notices = ref([])
 const loadingNotices = ref(false)
 const noticeForm = reactive({ title: '', content: '' })
 
+const articles = ref([])
+const loadingArticles = ref(false)
+const articleForm = reactive({ title: '', content: '', coverUrl: '' })
+
 const activities = ref([])
 const loadingActivities = ref(false)
 const activityForm = reactive({
@@ -568,6 +607,7 @@ const tabs = [
   { key: 'members', label: '成员管理', desc: '角色与活跃' },
   { key: 'review', label: '成员审核', desc: '准入待办' },
   { key: 'notices', label: '公告触达', desc: '同步安排' },
+  { key: 'articles', label: '团体文章', desc: '成员长文' },
   { key: 'activities', label: '活动运营', desc: '线下/线上' },
   { key: 'activity-review', label: '活动审核', desc: '成员投稿' },
   { key: 'camp', label: '打卡营', desc: '进度跟进' },
@@ -654,6 +694,7 @@ function switchTab(key) {
   if (key === 'members') loadMembers(memberStatus.value)
   if (key === 'review') loadMembers('pending')
   if (key === 'notices') loadNotices()
+  if (key === 'articles') loadArticles()
   if (key === 'activities') loadActivities()
   if (key === 'activity-review') loadPendingActivityCount()
 }
@@ -862,6 +903,43 @@ async function loadNotices() {
     notices.value = []
   } finally {
     loadingNotices.value = false
+  }
+}
+
+async function loadArticles() {
+  loadingArticles.value = true
+  try {
+    const res = await fetchGroupArticles(spaceId.value)
+    articles.value = Array.isArray(res) ? res : res?.data ?? []
+  } catch (err) {
+    showFlash(err?.message || '文章加载失败', 'error')
+    articles.value = []
+  } finally {
+    loadingArticles.value = false
+  }
+}
+
+async function submitArticle() {
+  if (!articleForm.title.trim() || !articleForm.content.trim()) {
+    showFlash('请填写文章标题与正文', 'error')
+    return
+  }
+  saving.value = true
+  try {
+    await createGroupArticle(spaceId.value, {
+      title: articleForm.title,
+      content: articleForm.content,
+      coverUrl: articleForm.coverUrl || undefined
+    })
+    articleForm.title = ''
+    articleForm.content = ''
+    articleForm.coverUrl = ''
+    await loadArticles()
+    showFlash('文章已发布')
+  } catch (err) {
+    showFlash(err?.message || '发布失败', 'error')
+  } finally {
+    saving.value = false
   }
 }
 

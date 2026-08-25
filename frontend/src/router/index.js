@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user.js'
 import { hasEventGuestToken } from '@/utils/eventGuestToken.js'
 import platformRoutes from './modules/platform.routes.js'
@@ -8,7 +8,7 @@ import pcRoutes from './modules/pc.routes.js'
 import mobileRoutes from './modules/mobile.routes.js'
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     platformRoutes,
     adminRoutes,

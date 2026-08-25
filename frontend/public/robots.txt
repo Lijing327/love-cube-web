@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /fellowship/chat
+Disallow: /fellowship/login
+
+Sitemap: https://lovecube.xifg.com.cn/sitemap.xml

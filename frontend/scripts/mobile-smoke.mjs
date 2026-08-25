@@ -68,7 +68,7 @@ async function main() {
   page.setDefaultTimeout(20000)
 
   // 1) 内容中心布局
-  await page.goto(`${BASE}/#/platform/content`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/platform/content`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(800)
   await shot(page, '01-content')
   const contentTitle = await page.locator('h1', { hasText: '内容中心' }).count()
@@ -77,14 +77,14 @@ async function main() {
   note('内容中心指标并排且不高', metrics.ok, metrics.reason)
 
   // 2) 团体大厅
-  await page.goto(`${BASE}/#/platform/groups`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/platform/groups`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(800)
   await shot(page, '02-groups')
   const groupsOk = (await page.locator('text=团体').count()) > 0 || (await page.locator('h1').count()) > 0
   note('团体页可打开', groupsOk, page.url())
 
   // 3) 创建团体：未登录应跳登录或展示表单
-  await page.goto(`${BASE}/#/platform/groups/create`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/platform/groups/create`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1000)
   await shot(page, '03-create-redirect-or-form')
   const url = page.url()
@@ -104,7 +104,7 @@ async function main() {
   const phone = process.env.SMOKE_PHONE || ''
   const password = process.env.SMOKE_PASSWORD || ''
   if (phone && password) {
-    await page.goto(`${BASE}/#/login`, { waitUntil: 'networkidle' })
+    await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
     const phoneInput = page.locator('input[name="phone"], input[type="tel"], input[placeholder*="手机"]').first()
     const pwdInput = page.locator('input[name="password"], input[type="password"]').first()
@@ -117,7 +117,7 @@ async function main() {
     note('登录成功', loggedIn, page.url())
 
     if (loggedIn) {
-      await page.goto(`${BASE}/#/platform/groups/create`, { waitUntil: 'networkidle' })
+      await page.goto(`${BASE}/platform/groups/create`, { waitUntil: 'networkidle' })
       await page.waitForTimeout(800)
       await page.locator('input').nth(0).fill(`冒烟测试团${Date.now().toString().slice(-4)}`)
       await page.locator('textarea').first().fill('自动化冒烟：验证移动端创建团体流程')
@@ -162,7 +162,7 @@ async function main() {
   }
 
   // 5) 底栏导航
-  await page.goto(`${BASE}/#/platform`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/platform`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(600)
   const navCount = await page.locator('.mobile-quick-nav a').count()
   note('底部导航存在', navCount >= 4, `links=${navCount}`)

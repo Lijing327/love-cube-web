@@ -166,8 +166,8 @@ public class FellowshipInviteService {
         Map<String, Object> result = getMyCodeSummary(user);
         String normalizedOrigin = origin == null || origin.isBlank() ? "" : origin.trim().replaceAll("/+$", "");
         String inviteLink = normalizedOrigin.isBlank()
-                ? "/#/register?inviteCode=" + result.get("inviteCode")
-                : normalizedOrigin + "/#/register?inviteCode=" + result.get("inviteCode");
+                ? "/register?inviteCode=" + result.get("inviteCode")
+                : normalizedOrigin + "/register?inviteCode=" + result.get("inviteCode");
         result.put("inviteLink", inviteLink);
         return result;
     }

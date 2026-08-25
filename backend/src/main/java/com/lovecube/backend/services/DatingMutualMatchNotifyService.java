@@ -35,7 +35,7 @@ public class DatingMutualMatchNotifyService {
         }
         PlatformEvent event = eventRepository.findById(eventId).orElse(null);
         String eventTitle = event != null && event.getTitle() != null ? event.getTitle() : "联谊专场活动";
-        String linkUrl = "/#/fellowship/events/" + eventId + "/dating/matches";
+        String linkUrl = "/fellowship/events/" + eventId + "/dating/matches";
         String content = "你在「" + eventTitle + "」中有新的互选结果，快去查看吧。";
 
         int sent = 0;

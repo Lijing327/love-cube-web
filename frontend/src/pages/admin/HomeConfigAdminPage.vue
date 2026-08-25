@@ -132,7 +132,7 @@
       <div class="panel-head panel-head-with-action">
         <div>
           <h3>用户更新日志</h3>
-          <p class="panel-hint">展示于平台「更新日志」页（`/#/platform/changelog`），仅写用户能感知的功能与体验。</p>
+          <p class="panel-hint">展示于平台「更新日志」页（`/platform/changelog`），仅写用户能感知的功能与体验。</p>
         </div>
         <button type="button" class="admin-btn small" @click="addChangelogItem">新增用户日志</button>
       </div>

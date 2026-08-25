@@ -19,5 +19,5 @@ export function getInviteBaseUrl() {
 export function createInviteUrl(inviteCode) {
   const code = String(inviteCode || '').trim()
   if (!code) return ''
-  return `${getInviteBaseUrl()}/#/register?inviteCode=${encodeURIComponent(code)}`
+  return `${getInviteBaseUrl()}/register?inviteCode=${encodeURIComponent(code)}`
 }

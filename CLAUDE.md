@@ -39,7 +39,7 @@ mvnw.cmd spring-boot:run   # Dev server on port 8090 (Windows)
 
 ### Frontend (`frontend/src/`)
 
-**Routing** (`router/index.js`): Vue Router 4 in hash mode. Six route modules:
+**Routing** (`router/index.js`): Vue Router 4 in history mode. Six route modules:
 - `platform.routes.js` — wraps the platform layer under `PlatformLayout`
 - `fellowship.routes.js` — wraps fellowship pages under `FellowshipLayout`; pages needing auth carry `meta: { requiresAuth: true }`
 - `admin.routes.js` — wraps admin pages under `AdminLayout`; all children carry `meta: { requiresAdmin: true }`; loads permission cache via `userStore.loadAdminContext()` on entry
@@ -81,7 +81,7 @@ No Tailwind, no hardcoded hex colors in platform/admin pages — always use `var
 
 ### Platform module — key pages and their routes
 
-New pages are added as children of the platform route with path `platform/{feature}` (the wrapping layout is at `/`, so the full URL becomes `/#/platform/{feature}`):
+New pages are added as children of the platform route with path `platform/{feature}` (the wrapping layout is at `/`, so the full URL becomes `/platform/{feature}`):
 
 ```
 /platform/positive-share   → PositiveSharePage.vue
@@ -151,7 +151,7 @@ GitHub Actions (`.github/workflows/deploy.yml`) deploys to `lovecube.xifg.com.cn
 ## Key Conventions
 
 - **Composition API only** — all Vue components use `<script setup>`, no exceptions.
-- **No server-side routing** — hash mode SPA; Nginx serves static files without fallback rewrite.
+- **History 路由 SPA** — `createWebHistory()`；Nginx `try_files` 回退到 `index.html`。`/admin/api/` 与 `/admin/ws/` 反代 Spring Boot，前端管理页 `/admin` 走 SPA。旧 `/#/path` 由 `index.html` 跳到 `/path`。
 - **Layer isolation** — platform pages must not import fellowship components or use Vant; fellowship pages must not be placed in `src/pages/platform/`; PC and Mobile pages must not share components with each other.
 - **WeChat APIs replaced** — any historical `wx.*` call has an H5 equivalent in `utils/storage.js` or native browser APIs; do not reintroduce `wx.*`.
 - **Remote DB** — backend always connects to Aliyun RDS; no local DB setup needed.

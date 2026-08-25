@@ -506,7 +506,10 @@ function handleView(item) {
 
 async function handleShare(item) {
   rememberReading(item)
-  const url = `${window.location.origin}${window.location.pathname}${window.location.hash || '#/platform/content'}?content=${item.id}`
+  const path = window.location.pathname && window.location.pathname !== '/'
+    ? window.location.pathname
+    : '/platform/content'
+  const url = `${window.location.origin}${path}?content=${encodeURIComponent(item.id)}`
   try {
     await navigator?.clipboard?.writeText(url)
   } catch {

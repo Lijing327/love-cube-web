@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { storage } from '@f/utils/storage.js'
+import { currentAppPath } from '@/utils/appPath.js'
 
 const request = axios.create({
   baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api',
@@ -20,9 +21,9 @@ request.interceptors.response.use(
     if (status === 401) {
       storage.remove('token')
       storage.remove('userId')
-      const currentHash = window.location.hash?.replace(/^#/, '') || '/'
-      const encoded = encodeURIComponent(currentHash)
-      setTimeout(() => { window.location.hash = `#/fellowship/login?redirect=${encoded}` }, 100)
+      const currentPath = currentAppPath()
+      const encoded = encodeURIComponent(currentPath)
+      setTimeout(() => { window.location.assign(`/fellowship/login?redirect=${encoded}`) }, 100)
     }
     return Promise.reject(new Error(message))
   }

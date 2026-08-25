@@ -11,31 +11,31 @@ mkdirSync(OUT, { recursive: true })
 
 // 用户真实会走的平台移动路径（底栏场景 + /m 灰度）
 const PAGES = [
-  { id: 'home', path: '/#/platform', title: '平台首页' },
-  { id: 'local', path: '/#/platform/local', title: '本地' },
-  { id: 'content', path: '/#/platform/content', title: '内容中心' },
-  { id: 'publish', path: '/#/platform/positive-share', title: '发布/心声' },
-  { id: 'groups', path: '/#/platform/groups', title: '团体大厅' },
-  { id: 'groups-create', path: '/#/platform/groups/create', title: '创建团体' },
-  { id: 'groups-season', path: '/#/platform/groups/season', title: '赛季榜' },
-  { id: 'play', path: '/#/platform/play', title: '玩法中心' },
-  { id: 'help', path: '/#/platform/help', title: '互助广场' },
-  { id: 'events', path: '/#/platform/events', title: '活动中心' },
-  { id: 'articles', path: '/#/platform/articles', title: '文章' },
-  { id: 'announcements', path: '/#/announcements', title: '公告' },
-  { id: 'modules', path: '/#/modules', title: '模块中心' },
-  { id: 'me', path: '/#/platform/me', title: '我的' },
-  { id: 'messages', path: '/#/messages', title: '消息中心' },
-  { id: 'checkin', path: '/#/platform/checkin', title: '签到' },
-  { id: 'login', path: '/#/login', title: '登录' },
+  { id: 'home', path: '/platform', title: '平台首页' },
+  { id: 'local', path: '/platform/local', title: '本地' },
+  { id: 'content', path: '/platform/content', title: '内容中心' },
+  { id: 'publish', path: '/platform/positive-share', title: '发布/心声' },
+  { id: 'groups', path: '/platform/groups', title: '团体大厅' },
+  { id: 'groups-create', path: '/platform/groups/create', title: '创建团体' },
+  { id: 'groups-season', path: '/platform/groups/season', title: '赛季榜' },
+  { id: 'play', path: '/platform/play', title: '玩法中心' },
+  { id: 'help', path: '/platform/help', title: '互助广场' },
+  { id: 'events', path: '/platform/events', title: '活动中心' },
+  { id: 'articles', path: '/platform/articles', title: '文章' },
+  { id: 'announcements', path: '/announcements', title: '公告' },
+  { id: 'modules', path: '/modules', title: '模块中心' },
+  { id: 'me', path: '/platform/me', title: '我的' },
+  { id: 'messages', path: '/messages', title: '消息中心' },
+  { id: 'checkin', path: '/platform/checkin', title: '签到' },
+  { id: 'login', path: '/login', title: '登录' },
   // /m 灰度
-  { id: 'm-hub', path: '/#/m/platform', title: 'M玩法Hub' },
-  { id: 'm-groups', path: '/#/m/platform/groups', title: 'M团体' },
-  { id: 'm-local', path: '/#/m/platform/local', title: 'M本地' },
-  { id: 'm-help', path: '/#/m/platform/help', title: 'M互助' },
-  { id: 'm-content', path: '/#/m/platform/content', title: 'M内容' },
-  { id: 'm-share', path: '/#/m/platform/positive-share', title: 'M心声' },
-  { id: 'm-topics', path: '/#/m/platform/topics', title: 'M话题' }
+  { id: 'm-hub', path: '/m/platform', title: 'M玩法Hub' },
+  { id: 'm-groups', path: '/m/platform/groups', title: 'M团体' },
+  { id: 'm-local', path: '/m/platform/local', title: 'M本地' },
+  { id: 'm-help', path: '/m/platform/help', title: 'M互助' },
+  { id: 'm-content', path: '/m/platform/content', title: 'M内容' },
+  { id: 'm-share', path: '/m/platform/positive-share', title: 'M心声' },
+  { id: 'm-topics', path: '/m/platform/topics', title: 'M话题' }
 ]
 
 async function analyze(page) {
@@ -131,12 +131,12 @@ async function main() {
   if (groupId) {
     pages.splice(6, 0, {
       id: 'group-detail',
-      path: `/#/platform/groups/${groupId}`,
+      path: `/platform/groups/${groupId}`,
       title: '团体详情'
     })
     pages.push({
       id: 'm-group-detail',
-      path: `/#/m/platform/groups/${groupId}`,
+      path: `/m/platform/groups/${groupId}`,
       title: 'M团体详情'
     })
   }

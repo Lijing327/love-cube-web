@@ -64,6 +64,7 @@ import {
 } from '@/api/notification.js'
 import { reportGrowthCampaignClick } from '@/api/growthCampaign.js'
 import { formatTime } from '@/utils/format.js'
+import { toRouterPath } from '@/utils/appPath.js'
 
 const router = useRouter()
 
@@ -81,6 +82,7 @@ const TYPE_LABELS = {
   GROUP_APPLICATION_APPROVED: '团体',
   GROUP_APPLICATION_REJECTED: '团体',
   GROUP_JOIN_REQUEST: '团体',
+  GROUP_WEEKLY_DIGEST: '团体周报',
   CONTENT_MODERATION_PASSED: '审核',
   CONTENT_MODERATION_REJECTED: '审核',
   MATCH_PROFILE_REVIEW_PASSED: '审核',
@@ -196,8 +198,7 @@ async function openItem(item) {
 }
 
 function navigateByUrl(url) {
-  if (!url || typeof url !== 'string') return false
-  const path = url.startsWith('/#/') ? url.slice(2) : url
+  const path = toRouterPath(url)
   if (path.startsWith('/')) {
     router.push(path)
     return true

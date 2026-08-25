@@ -10,37 +10,37 @@ public enum GrowthCampaignTemplate {
             "VERIFY_NOW",
             "完成认证，获得优先推荐",
             "认证后你将获得专属认证标识，并提升推荐曝光，让更多合适的人看到你。",
-            "/#/fellowship/verify"
+            "/fellowship/verify"
     ),
     COMPLETE_PROFILE(
             "COMPLETE_PROFILE",
             "完善资料，提升推荐曝光",
             "补全资料后，你的推荐力会提升，还能解锁成长经验、等级和专属徽章。",
-            "/#/fellowship/me"
+            "/fellowship/me"
     ),
     ENABLE_FELLOWSHIP(
             "ENABLE_FELLOWSHIP",
             "开通联谊，进入推荐池",
             "开通联谊后，你将进入推荐池，有机会被更多用户看到。",
-            "/#/fellowship/me"
+            "/fellowship/me"
     ),
     UPLOAD_PHOTOS(
             "UPLOAD_PHOTOS",
             "上传照片，提升吸引力",
             "上传 3 张照片后可获得照片达人徽章，并提升个人主页可信度。",
-            "/#/fellowship/me"
+            "/fellowship/me"
     ),
     CITY_REMINDER(
             "CITY_REMINDER",
             "填写地区，提升同城匹配",
             "填写地区后，系统可以更准确地为你推荐同城或附近用户。",
-            "/#/fellowship/profile/edit"
+            "/fellowship/profile/edit"
     ),
     NEARLY_COMPLETE(
             "NEARLY_COMPLETE",
             "再补一项，解锁资料达人",
             "你的资料已经接近完善，再补全缺失项即可获得资料达人徽章和更多推荐权益。",
-            "/#/fellowship/me"
+            "/fellowship/me"
     );
 
     private final String code;

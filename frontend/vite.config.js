@@ -13,11 +13,11 @@ export default defineConfig(({ mode }) => {
         injectRegister: null,
         includeAssets: ['favicon.svg', 'pwa/apple-touch-icon.png'],
         manifest: {
-          name: 'Love Cube 多元连接平台',
+          name: 'Love Cube',
           short_name: 'Love Cube',
-          description: '一个持续进化的多功能连接平台',
+          description: '内容、活动与社交，从 Love Cube 开始',
           lang: 'zh-CN',
-          start_url: '/#/',
+          start_url: '/',
           scope: '/',
           display: 'standalone',
           background_color: '#F8FAFC',
@@ -69,7 +69,11 @@ export default defineConfig(({ mode }) => {
       port: Number(env.VITE_DEV_PORT) || 5173,
       strictPort: true,
       proxy: {
-        '/admin': {
+        '/admin/api': {
+          target: env.VITE_BACKEND_ORIGIN || 'http://xifg.com.cn:8090',
+          changeOrigin: true
+        },
+        '/admin/ws': {
           target: env.VITE_BACKEND_ORIGIN || 'http://xifg.com.cn:8090',
           changeOrigin: true,
           ws: true

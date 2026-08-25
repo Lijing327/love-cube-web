@@ -25,7 +25,7 @@ async function main() {
   const loginJson = await loginRes.json()
   if (!loginJson?.token) throw new Error(`login failed: ${JSON.stringify(loginJson)}`)
 
-  await page.goto(`${BASE}/#/platform`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${BASE}/platform`, { waitUntil: 'domcontentloaded' })
   await page.evaluate((payload) => {
     localStorage.setItem('token', payload.token)
     localStorage.setItem('userId', String(payload.userId || ''))
@@ -47,7 +47,7 @@ async function main() {
   await dismissPopups()
 
   // create group page
-  await page.goto(`${BASE}/#/platform/groups/create`, { waitUntil: 'networkidle' })
+  await page.goto(`${BASE}/platform/groups/create`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(800)
   await dismissPopups()
   const onCreate = page.url().includes('/groups/create')
@@ -94,11 +94,11 @@ async function main() {
 
   // layout pages after login
   for (const [id, path] of [
-    ['help', '/#/platform/help'],
-    ['season', '/#/platform/groups/season'],
-    ['groups', '/#/platform/groups'],
-    ['share', '/#/platform/positive-share'],
-    ['me', '/#/platform/me']
+    ['help', '/platform/help'],
+    ['season', '/platform/groups/season'],
+    ['groups', '/platform/groups'],
+    ['share', '/platform/positive-share'],
+    ['me', '/platform/me']
   ]) {
     await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(700)

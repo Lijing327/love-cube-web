@@ -177,8 +177,14 @@ public class PlatformContentController {
         String summary = String.valueOf(payload.getOrDefault("summary", "")).trim();
         String content = String.valueOf(payload.getOrDefault("content", "")).trim();
         String category = String.valueOf(payload.getOrDefault("category", "平台资讯")).trim();
-        String tag = String.valueOf(payload.getOrDefault("tag", category)).trim();
+        if (category.isBlank() || "null".equalsIgnoreCase(category)) {
+            category = "平台资讯";
+        }
+        String tag = resolveArticleTags(payload, category);
         String coverUrl = String.valueOf(payload.getOrDefault("coverUrl", "")).trim();
+        if ("null".equalsIgnoreCase(coverUrl)) {
+            coverUrl = "";
+        }
 
         if (title.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "标题不能为空");
@@ -192,8 +198,8 @@ public class PlatformContentController {
         article.setTitle(title);
         article.setSummary(summary);
         article.setContent(content);
-        article.setCategory(category.isBlank() ? "平台资讯" : category);
-        article.setTag(tag.isBlank() ? article.getCategory() : tag);
+        article.setCategory(category);
+        article.setTag(tag.isBlank() ? category : tag);
         article.setCoverUrl(coverUrl);
         article.setStatus("draft");
         article.setPinned(false);
@@ -442,6 +448,42 @@ public class PlatformContentController {
                 checkedIn, event, now, reviewCompleted));
         datingEventService.enrichSignupRow(row, event, userId);
         return row;
+    }
+
+    private String resolveArticleTags(Map<String, Object> payload, String fallback) {
+        java.util.LinkedHashSet<String> tags = new java.util.LinkedHashSet<>();
+        Object tagsObj = payload.get("tags");
+        if (tagsObj instanceof java.util.Collection<?> collection) {
+            for (Object item : collection) {
+                addNormalizedTag(tags, item == null ? "" : String.valueOf(item));
+            }
+        }
+        if (tags.isEmpty()) {
+            Object rawTag = payload.get("tag");
+            if (rawTag != null && !"null".equalsIgnoreCase(String.valueOf(rawTag))) {
+                for (String part : String.valueOf(rawTag).split("[,，]")) {
+                    addNormalizedTag(tags, part);
+                }
+            }
+        }
+        if (tags.isEmpty()) {
+            return fallback;
+        }
+        return String.join(",", tags);
+    }
+
+    private void addNormalizedTag(java.util.Set<String> tags, String raw) {
+        if (tags.size() >= 5) {
+            return;
+        }
+        String tag = raw == null ? "" : raw.trim();
+        if (tag.isEmpty() || "null".equalsIgnoreCase(tag)) {
+            return;
+        }
+        if (tag.length() > 12) {
+            tag = tag.substring(0, 12);
+        }
+        tags.add(tag);
     }
 
     private Long parseLong(Object value) {

@@ -192,6 +192,14 @@ public class NotificationService {
         return userNotificationRepository.deleteForUser(id, userId) > 0;
     }
 
+    @Transactional
+    public int deleteByTypeForUser(Long userId, String type) {
+        if (userId == null || type == null || type.isBlank()) {
+            return 0;
+        }
+        return userNotificationRepository.deleteByUserIdAndType(userId, type.trim());
+    }
+
     /**
      * 平台重要公告：向活跃用户批量发送站内消息（单请求有上限）。
      */

@@ -79,6 +79,7 @@ function buildMobileItems() {
     { to: '/m/platform/groups', icon: '◎', title: '团体广场', sub: '发现 · 加入小组', tone: 'green' },
     { to: '/m/platform/local', icon: '⌂', title: '本地服务', sub: '招聘二手租房', tone: 'amber' },
     { to: '/m/platform/topics', icon: '💬', title: '话题广场', sub: '兴趣讨论', tone: 'cyan' },
+    { to: '/m/platform/articles', icon: '文', title: '精选内容', sub: '阅读与投稿', tone: 'cyan' },
     { to: '/m/platform/messages', icon: '✉', title: '消息中心', sub: '通知与互动', tone: 'green' },
     { to: '/m/fellowship/ai-tools', icon: '✦', title: 'AI 助手', sub: '润色 · 话术', tone: 'violet' },
     { to: '/m/platform/member', icon: '★', title: '平台会员', sub: '权益升级', tone: 'indigo' },

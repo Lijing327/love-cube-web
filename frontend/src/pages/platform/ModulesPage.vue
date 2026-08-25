@@ -4,7 +4,7 @@
       <section class="mp-hero">
         <div>
           <h1 class="mp-title">模块中心</h1>
-          <p class="mp-sub">连接人与服务的多元功能平台，探索 Love Cube 全新功能入口</p>
+          <p class="mp-sub">探索内容、活动、社交与服务入口</p>
           <div class="mp-stats">
             <div v-for="item in stats" :key="item.label" class="mp-stat">
               <p class="mp-stat-value">{{ item.value }}</p>

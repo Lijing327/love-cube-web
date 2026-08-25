@@ -3,7 +3,7 @@
     <img class="vision-art" :src="visionImage" alt="" aria-hidden="true">
     <div>
       <p>平台愿景</p>
-      <h2>打造一个开放、真诚、有价值的多功能平台，连接人与内容，创造更多可能。</h2>
+      <h2>打造一个开放、真诚、有价值的社区，让人与内容相遇，创造更多可能。</h2>
     </div>
 
     <dl>

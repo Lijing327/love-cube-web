@@ -87,9 +87,16 @@ public class GroupWeeklyDigestService {
         long active = ((Number) digest.get("activeMembers")).longValue();
         long unclaimed = ((Number) digest.get("unclaimedTasks")).longValue();
         long pending = ((Number) digest.get("pendingJoinRequests")).longValue();
+        long memberCount = ((Number) digest.get("memberCount")).longValue();
+        if (!force && memberCount <= 0 && pending <= 0) {
+            return Map.of("sent", false, "message", "本周无成员动态，已跳过周报");
+        }
 
         String content = String.format(
-                "本周打卡率 %d%%，活跃成员 %d 人，待领取任务 %d 项，待审核入团 %d 条。",
+                "这是发给「%s」团体管理员的每周经营摘要（%s 至 %s）。本周打卡率 %d%%，活跃成员 %d 人；待领取任务 %d 项，待审核入团 %d 条。点击可查看团体。",
+                groupName,
+                digest.get("weekStart"),
+                digest.get("weekEnd"),
                 rate, active, unclaimed, pending);
         String link = "/platform/groups/" + groupId;
 

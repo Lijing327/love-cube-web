@@ -1,5 +1,5 @@
 <template>
-  <ArticlesPageDesktop />
+  <ArticlesPageDesktop write-path="/pc/platform/articles/write" />
 </template>
 
 <script setup>

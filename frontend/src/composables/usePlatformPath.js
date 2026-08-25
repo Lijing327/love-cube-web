@@ -98,7 +98,16 @@ export function usePlatformPath() {
     if (route.path.startsWith('/pc')) {
       return eid ? `/articles/${eid}` : '/pc/platform/articles'
     }
+    if (route.path.startsWith('/m/platform')) {
+      return eid ? `/articles/${eid}` : '/m/platform/articles'
+    }
     return eid ? `/articles/${eid}` : '/platform/articles'
+  }
+
+  function articlesWritePath() {
+    if (route.path.startsWith('/pc')) return '/pc/platform/articles/write'
+    if (route.path.startsWith('/m/platform')) return '/m/platform/articles/write'
+    return '/platform/articles'
   }
 
   const isMobileShell = computed(() => route.path.startsWith('/m/platform'))
@@ -119,6 +128,7 @@ export function usePlatformPath() {
     contentPath,
     announcementsPath,
     articlesPath,
+    articlesWritePath,
     isMobileShell,
     isPcShell
   }

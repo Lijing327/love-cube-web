@@ -125,6 +125,22 @@ public class NotificationController {
         }
     }
 
+    @DeleteMapping("/by-type")
+    public ResponseEntity<?> deleteByType(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam String type) {
+        try {
+            User user = unifiedProfileService.requireCurrentUser(authHeader);
+            if (type == null || type.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "缺少通知类型"));
+            }
+            int removed = notificationService.deleteByTypeForUser(user.getUserid(), type);
+            return ResponseEntity.ok(Map.of("message", "已删除", "removed", removed));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
+        }
+    }
+
     private Map<String, Object> toApiRow(UserNotification n) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", n.getId());

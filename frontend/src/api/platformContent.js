@@ -22,7 +22,14 @@ export function fetchArticleDetail(id) {
 }
 
 export function submitArticle(payload) {
-  return request.post('/articles/submissions', payload)
+  const tags = Array.isArray(payload?.tags)
+    ? payload.tags.map((item) => String(item || '').trim()).filter(Boolean)
+    : []
+  return request.post('/articles/submissions', {
+    ...payload,
+    tags,
+    tag: tags.length ? tags.join(',') : payload?.tag
+  })
 }
 
 export function fetchEvents(params = { status: 'published' }) {

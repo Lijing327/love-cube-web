@@ -52,6 +52,12 @@ export async function deleteNotification(id) {
   return res
 }
 
+export async function deleteNotificationsByType(type) {
+  const res = await request.delete('/notifications/by-type', { params: { type } })
+  clearNotifUnreadCache()
+  return res
+}
+
 export async function getNotifUnreadCountCached(maxAgeMs = 15000) {
   const now = Date.now()
   const bypassCache = maxAgeMs != null && maxAgeMs <= 0

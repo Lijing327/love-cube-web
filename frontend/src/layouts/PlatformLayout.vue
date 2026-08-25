@@ -9,7 +9,6 @@
             </span>
             <span class="brand-copy">
               <span class="brand-text">Love Cube</span>
-              <span class="brand-tag">多元连接平台</span>
             </span>
           </router-link>
 
@@ -107,7 +106,7 @@
       <router-link to="/me" :class="{ 'is-active': isActive('/me') || isActive('/platform/me') }">我的</router-link>
     </nav>
 
-    <footer class="platform-footer"><div class="footer-inner"><div class="footer-brand"><p class="footer-title">Love Cube Platform</p><p class="footer-desc">连接真实的人、内容与服务，打造可持续增长的多模块平台。</p></div><div class="footer-cols"><section class="footer-col"><h4>平台</h4><router-link to="/modules">模块中心</router-link><router-link to="/announcements">平台公告</router-link><router-link to="/fellowship-intro">联谊</router-link></section><section class="footer-col"><h4>内容</h4><router-link to="/articles">精选内容</router-link><router-link to="/events">活动中心</router-link><router-link to="/feedback">建议反馈</router-link></section><section class="footer-col"><h4>合规</h4><router-link to="/policies/terms">用户协议</router-link><router-link to="/policies/privacy">隐私政策</router-link><router-link to="/policies/content-policy">内容规范</router-link></section></div></div><div class="footer-bottom">© {{ new Date().getFullYear() }} Love Cube. All rights reserved.</div></footer>
+    <footer class="platform-footer"><div class="footer-inner"><div class="footer-brand"><p class="footer-title">Love Cube Platform</p><p class="footer-desc">连接真实的人、内容与服务。</p></div><div class="footer-cols"><section class="footer-col"><h4>平台</h4><router-link to="/modules">模块中心</router-link><router-link to="/announcements">平台公告</router-link><router-link to="/fellowship-intro">联谊</router-link></section><section class="footer-col"><h4>内容</h4><router-link to="/articles">精选内容</router-link><router-link to="/events">活动中心</router-link><router-link to="/feedback">建议反馈</router-link></section><section class="footer-col"><h4>合规</h4><router-link to="/policies/terms">用户协议</router-link><router-link to="/policies/privacy">隐私政策</router-link><router-link to="/policies/content-policy">内容规范</router-link></section></div></div><div class="footer-bottom">© {{ new Date().getFullYear() }} Love Cube. All rights reserved.</div></footer>
 
     <transition name="menu-fade"><div v-if="menuOpen" class="mobile-menu-mask" @click="menuOpen = false" /></transition>
     <transition name="menu-slide">
@@ -634,13 +633,6 @@ onBeforeUnmount(() => {
   font-size: 18px;
   font-weight: 800;
   color: #ec4899;
-}
-
-.brand-tag {
-  margin-top: 1px;
-  font-size: 10px;
-  color: #64748b;
-  font-weight: 600;
 }
 
 .nav-links {
@@ -1559,10 +1551,6 @@ onBeforeUnmount(() => {
 
   .brand-text {
     font-size: 17px;
-  }
-
-  .brand-tag {
-    display: none;
   }
 
   .menu-toggle {

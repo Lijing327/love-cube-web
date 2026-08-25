@@ -92,6 +92,11 @@ export default {
       meta: { module: 'platform' }
     },
     {
+      path: 'platform/articles/write',
+      component: () => import('@/pages/pc/platform/ArticleWritePage.vue'),
+      meta: { module: 'platform', requiresAuth: true }
+    },
+    {
       path: 'platform/articles',
       component: () => import('@/pages/pc/platform/ArticlesPage.vue'),
       meta: { module: 'platform' }

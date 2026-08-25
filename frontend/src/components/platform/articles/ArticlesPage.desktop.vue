@@ -5,7 +5,7 @@
         <p class="hero-kicker">Featured Content</p>
         <h1>精选内容</h1>
         <p>精选攻略、平台公告与活动资讯，一站式浏览。</p>
-        <button type="button" class="publish-entry-btn" @click="openPublishDialog">发布内容</button>
+        <button type="button" class="publish-entry-btn" @click="openPublishDialog">{{ writePath ? '写文章' : '发布内容' }}</button>
       </div>
       <div class="hero-visual" aria-hidden="true">
         <img :src="heroImage" alt="" />
@@ -241,6 +241,10 @@ import announcementImage from '@/assets/公告模块卡片.webp'
 import ctaImage from '@/assets/底部横幅 CTA.webp'
 import moduleImage from '@/assets/未来扩展模块.webp'
 
+const props = defineProps({
+  writePath: { type: String, default: '' }
+})
+
 const PAGE_SIZE = 4
 const route = useRoute()
 const router = useRouter()
@@ -375,9 +379,14 @@ function formatHeat(val) {
 }
 
 function openPublishDialog() {
+  const nextPath = props.writePath || '/articles'
   if (!userStore.isLoggedIn) {
-    userStore.setPostLoginRedirect('/articles')
-    router.push('/login?redirect=%2Farticles')
+    userStore.setPostLoginRedirect(nextPath)
+    router.push({ path: '/login', query: { redirect: nextPath } })
+    return
+  }
+  if (props.writePath) {
+    router.push(props.writePath)
     return
   }
   publishDialogVisible.value = true

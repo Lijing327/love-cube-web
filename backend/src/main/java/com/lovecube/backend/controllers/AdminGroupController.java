@@ -43,7 +43,7 @@ public class AdminGroupController {
     private final PlatGroupRepository platGroupRepository;
     private final PlatGroupMemberRepository platGroupMemberRepository;
     private final UserRepository userRepository;
-    private final AdminAuthService adminAuthService; 
+    private final AdminAuthService adminAuthService;
     private final NotificationService notificationService;
 
     public AdminGroupController(

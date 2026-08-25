@@ -5,7 +5,6 @@
         <router-link to="/pc/platform" class="pc-brand">
           <img :src="loveCubeIcon" class="pc-brand-logo" alt="" />
           <span class="pc-brand-text">Love Cube</span>
-          <span class="pc-brand-tag">多元连接平台</span>
         </router-link>
 
         <nav class="pc-nav-links">
@@ -37,7 +36,7 @@
       <div class="pc-footer-inner">
         <div class="pc-footer-brand">
           <p class="pc-footer-title">Love Cube Platform</p>
-          <p class="pc-footer-desc">连接真实的人、内容与服务，打造可持续增长的多模块平台。</p>
+          <p class="pc-footer-desc">连接真实的人、内容与服务。</p>
         </div>
         <div class="pc-footer-cols">
           <section class="pc-footer-col">
@@ -166,14 +165,6 @@ onBeforeUnmount(() => {
   font-weight: 800;
   color: var(--lc-text, #0f172a);
   letter-spacing: -0.3px;
-}
-
-.pc-brand-tag {
-  font-size: 11px;
-  color: var(--lc-muted, #64748b);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 999px;
-  padding: 1px 7px;
 }
 
 .pc-nav-links {

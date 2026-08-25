@@ -71,6 +71,16 @@ export default {
       meta: { module: 'platform' }
     },
     {
+      path: 'platform/articles/write',
+      component: () => import('@/pages/mobile/platform/ArticleWritePage.vue'),
+      meta: authPlatform
+    },
+    {
+      path: 'platform/articles',
+      component: () => import('@/pages/mobile/platform/ArticlesPage.vue'),
+      meta: { module: 'platform' }
+    },
+    {
       path: 'platform/messages',
       component: () => import('@/pages/mobile/platform/MessagesPage.vue'),
       meta: authPlatform
@@ -254,6 +264,7 @@ export default {
           help: '/m/platform/help',
           local: '/m/platform/local',
           topics: '/m/platform/topics',
+          articles: '/m/platform/articles',
           groups: '/m/platform/groups',
           'my-groups': '/m/platform/my-groups',
           content: '/m/platform/content',

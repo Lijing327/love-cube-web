@@ -3,7 +3,7 @@
     <section class="hero-portal">
       <div class="hero-copy">
         <p class="portal-kicker">LOVE CUBE PLATFORM</p>
-        <h1>一个持续进化的<br>多功能连接平台</h1>
+        <h1>内容、活动与社交<br>持续生长</h1>
         <nav class="quick-links" aria-label="快速入口">
           <router-link
             v-for="item in quickLinks"

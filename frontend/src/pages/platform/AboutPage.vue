@@ -9,7 +9,7 @@
       <p class="platform-kicker">About Platform</p>
       <h1 class="platform-title">关于 Love Cube 平台</h1>
       <p class="platform-subtitle">
-        Love Cube 是一个多元连接平台，联谊只是其中一个模块，平台整体围绕内容、活动、社交和服务构建。
+        Love Cube 围绕内容、活动、社交和服务构建，联谊只是其中一个模块。
       </p>
     </section>
 

@@ -5,7 +5,7 @@
         <p class="hero-kicker">Featured Content</p>
         <h1>精选内容</h1>
         <p>精选攻略、平台公告与活动资讯，一站式浏览。</p>
-        <button type="button" class="publish-entry-btn" @click="openPublishDialog">{{ writePath ? '写文章' : '发布内容' }}</button>
+        <button type="button" class="publish-entry-btn" @click="openPublishDialog">{{ useWritePage ? '写文章' : '发布内容' }}</button>
       </div>
       <div class="hero-visual" aria-hidden="true">
         <img :src="heroImage" alt="" />
@@ -233,6 +233,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchArticles, fetchHotTopics, fetchRecommendedAuthors, submitArticle } from '@/api/platformContent.js'
 import { useUserStore } from '@/stores/user.js'
 import { useImageUpload } from '@/composables/useImageUpload.js'
+import { usePlatformPath } from '@/composables/usePlatformPath.js'
 import heroImage from '@/assets/首页首屏右侧大图.webp'
 import leadImage from '@/assets/联谊专区.webp'
 import eventImage from '@/assets/活动模块.webp'
@@ -249,6 +250,14 @@ const PAGE_SIZE = 4
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const { articlesWritePath } = usePlatformPath()
+const resolvedWritePath = computed(() => {
+  const fromProp = String(props.writePath || '').trim()
+  if (fromProp.endsWith('/write')) return fromProp
+  const fromShell = articlesWritePath()
+  return fromShell.endsWith('/write') ? fromShell : ''
+})
+const useWritePage = computed(() => Boolean(resolvedWritePath.value))
 const loading = ref(false)
 const allItems = ref([])
 const activeCategory = ref('all')
@@ -379,14 +388,14 @@ function formatHeat(val) {
 }
 
 function openPublishDialog() {
-  const nextPath = props.writePath || '/articles'
+  const nextPath = resolvedWritePath.value || '/articles'
   if (!userStore.isLoggedIn) {
     userStore.setPostLoginRedirect(nextPath)
     router.push({ path: '/login', query: { redirect: nextPath } })
     return
   }
-  if (props.writePath) {
-    router.push(props.writePath)
+  if (resolvedWritePath.value) {
+    router.push(resolvedWritePath.value)
     return
   }
   publishDialogVisible.value = true

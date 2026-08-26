@@ -2,56 +2,105 @@
   <section class="write-pc">
     <header class="write-head">
       <router-link :to="listPath" class="back">← 返回精选内容</router-link>
-      <div>
-        <p class="kicker">投稿</p>
+      <div class="write-head-copy">
         <h1>写文章</h1>
-        <p>填写标题、正文和标签。提交后由管理员审核，通过后会出现在精选内容。</p>
+        <p>按精选内容卡片的结构填写：封面、分类、标题、摘要和正文。</p>
       </div>
     </header>
 
     <div class="write-grid">
       <form class="write-main" @submit.prevent="submit">
-        <label class="title-field">
-          <span class="sr-only">标题</span>
-          <input
-            v-model="form.title"
-            class="title-input"
-            type="text"
-            :maxlength="limits.title"
-            placeholder="请输入标题"
-          >
-        </label>
-        <label class="content-field">
-          <span class="sr-only">正文</span>
-          <textarea
-            v-model="form.content"
-            class="content-input"
-            :maxlength="limits.content"
-            placeholder="写下正文…"
-          />
-        </label>
-        <p class="count">{{ form.content.length }}/{{ limits.content }}</p>
+        <div
+          class="cover-zone"
+          :class="{ 'has-cover': form.coverUrl }"
+          @click="!form.coverUrl && !coverUploading && pickCover()"
+        >
+          <img v-if="form.coverUrl" :src="form.coverUrl" alt="封面预览" class="cover-img">
+          <span v-if="form.category" class="cover-badge">{{ form.category }}</span>
+          <div class="cover-empty" v-if="!form.coverUrl">
+            <strong>上传封面</strong>
+            <span>选填 · 显示在精选内容卡片顶部</span>
+          </div>
+          <div class="cover-tools" @click.stop>
+            <button type="button" class="cover-btn" :disabled="submitting || coverUploading" @click="pickCover">
+              {{ coverUploading ? '上传中…' : (form.coverUrl ? '更换' : '选择图片') }}
+            </button>
+            <button
+              v-if="form.coverUrl"
+              type="button"
+              class="cover-btn danger"
+              :disabled="submitting || coverUploading"
+              @click="removeCover"
+            >
+              删除
+            </button>
+          </div>
+        </div>
+
+        <div class="write-body">
+          <label class="title-field">
+            <span class="sr-only">标题</span>
+            <input
+              v-model="form.title"
+              class="title-input"
+              type="text"
+              :maxlength="limits.title"
+              placeholder="请输入标题"
+            >
+          </label>
+          <label class="content-field">
+            <span class="sr-only">正文</span>
+            <textarea
+              v-model="form.content"
+              class="content-input"
+              :maxlength="limits.content"
+              placeholder="写下正文…"
+            />
+          </label>
+          <p class="count">{{ form.content.length }}/{{ limits.content }}</p>
+        </div>
       </form>
 
       <aside class="write-side">
-        <section class="side-card">
-          <h2>标签</h2>
-          <p class="hint">回车或逗号添加，最多 {{ limits.maxTags }} 个</p>
-          <div class="tag-box" @click="focusTagInput">
-            <span v-for="(tag, index) in tags" :key="`${tag}-${index}`" class="tag-chip">
-              {{ tag }}
-              <button type="button" class="tag-remove" :aria-label="`移除 ${tag}`" @click="removeTag(index)">×</button>
-            </span>
-            <input
-              ref="tagInputRef"
-              v-model="form.tagDraft"
-              class="tag-input"
-              type="text"
-              :maxlength="limits.tag"
-              placeholder="添加标签"
-              @keydown="onTagKeydown"
-              @blur="onTagBlur"
-            >
+        <section class="side-panel">
+          <h2>卡片信息</h2>
+
+          <label class="field">
+            <span>分类</span>
+            <select v-model="form.category" class="side-select">
+              <option v-for="item in categories" :key="item" :value="item">{{ item }}</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>摘要 <em>{{ form.summary.length }}/{{ limits.summary }}</em></span>
+            <textarea
+              v-model="form.summary"
+              class="summary-input"
+              rows="3"
+              :maxlength="limits.summary"
+              placeholder="一句话介绍，不填则截取正文开头"
+            />
+          </label>
+
+          <div class="field">
+            <span>话题标签</span>
+            <div class="tag-box" @click="focusTagInput">
+              <span v-for="(tag, index) in tags" :key="`${tag}-${index}`" class="tag-chip">
+                {{ tag }}
+                <button type="button" class="tag-remove" :aria-label="`移除 ${tag}`" @click="removeTag(index)">×</button>
+              </span>
+              <input
+                ref="tagInputRef"
+                v-model="form.tagDraft"
+                class="tag-input"
+                type="text"
+                :maxlength="limits.tag"
+                placeholder="回车添加，最多 5 个"
+                @keydown="onTagKeydown"
+                @blur="onTagBlur"
+              >
+            </div>
           </div>
         </section>
 
@@ -81,13 +130,17 @@ const {
   form,
   tags,
   submitting,
+  coverUploading,
   message,
   isError,
   removeTag,
   onTagKeydown,
   onTagBlur,
+  pickCover,
+  removeCover,
   submit,
-  limits
+  limits,
+  categories
 } = useArticleWrite({ listPath: props.listPath })
 
 function focusTagInput() {
@@ -97,58 +150,50 @@ function focusTagInput() {
 
 <style scoped>
 .write-pc {
-  max-width: 1120px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: var(--lc-space-8) var(--lc-space-6) var(--lc-space-16);
+  padding: var(--lc-space-6) var(--lc-space-6) var(--lc-space-16);
 }
 
 .write-head {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: var(--lc-space-5);
-  margin-bottom: var(--lc-space-8);
+  margin-bottom: var(--lc-space-5);
 }
 
 .back {
   flex-shrink: 0;
-  padding-top: var(--lc-space-1);
   color: var(--lc-blue);
   text-decoration: none;
-  font-size: var(--lc-text-base);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
 }
 
-.kicker {
-  margin: 0 0 var(--lc-space-1);
-  font-size: var(--lc-text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lc-blue);
-  font-weight: 700;
-}
-
-.write-head h1 {
+.write-head-copy h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--lc-text);
+  letter-spacing: -0.02em;
 }
 
-.write-head p {
-  margin: var(--lc-space-2) 0 0;
+.write-head-copy p {
+  margin: 4px 0 0;
   color: var(--lc-muted);
-  font-size: var(--lc-text-base);
-  line-height: 1.5;
+  font-size: var(--lc-text-sm);
+  line-height: 1.45;
 }
 
 .write-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: var(--lc-space-6);
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--lc-space-5);
   align-items: start;
 }
 
 .write-main,
-.side-card {
+.side-panel {
   background: var(--lc-surface);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius);
@@ -156,9 +201,98 @@ function focusTagInput() {
 }
 
 .write-main {
+  overflow: hidden;
+  min-height: 640px;
   display: flex;
   flex-direction: column;
-  min-height: 560px;
+}
+
+.cover-zone {
+  position: relative;
+  aspect-ratio: 16 / 7;
+  background: linear-gradient(180deg, var(--lc-blue-light), var(--lc-soft));
+  border-bottom: 1px solid var(--lc-border);
+}
+
+.cover-zone:not(.has-cover) {
+  cursor: pointer;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cover-badge {
+  position: absolute;
+  left: var(--lc-space-4);
+  top: var(--lc-space-4);
+  z-index: 1;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--lc-surface);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cover-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--lc-blue-mid);
+  pointer-events: none;
+}
+
+.cover-empty strong {
+  font-size: var(--lc-text-base);
+}
+
+.cover-empty span {
+  color: var(--lc-muted);
+  font-size: var(--lc-text-xs);
+}
+
+.cover-tools {
+  position: absolute;
+  right: var(--lc-space-4);
+  bottom: var(--lc-space-4);
+  display: flex;
+  gap: var(--lc-space-2);
+}
+
+.cover-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lc-surface);
+  color: var(--lc-text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--lc-shadow-sm);
+}
+
+.cover-btn.danger {
+  color: var(--lc-red);
+}
+
+.cover-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.write-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: var(--lc-space-6);
 }
 
@@ -174,10 +308,11 @@ function focusTagInput() {
 }
 
 .title-input {
-  padding-bottom: var(--lc-space-4);
+  padding-bottom: var(--lc-space-3);
   border-bottom: 1px solid var(--lc-border);
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .content-field {
@@ -188,9 +323,9 @@ function focusTagInput() {
 
 .content-input {
   flex: 1;
-  min-height: 420px;
+  min-height: 320px;
   resize: vertical;
-  line-height: 1.75;
+  line-height: 1.8;
   font-size: var(--lc-text-md);
 }
 
@@ -201,19 +336,60 @@ function focusTagInput() {
   font-size: var(--lc-text-xs);
 }
 
-.side-card {
+.write-side {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: var(--lc-space-3);
+}
+
+.side-panel {
+  display: grid;
+  gap: var(--lc-space-4);
   padding: var(--lc-space-5);
 }
 
-.side-card h2 {
+.side-panel h2 {
   margin: 0;
-  font-size: var(--lc-text-lg);
+  font-size: var(--lc-text-base);
+  font-weight: 800;
 }
 
-.hint {
-  margin: var(--lc-space-1) 0 var(--lc-space-3);
-  color: var(--lc-subtle);
+.field {
+  display: grid;
+  gap: var(--lc-space-2);
+}
+
+.field span {
+  display: flex;
+  justify-content: space-between;
+  color: var(--lc-slate);
   font-size: var(--lc-text-sm);
+  font-weight: 700;
+}
+
+.field em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--lc-subtle);
+}
+
+.side-select,
+.summary-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  background: var(--lc-soft);
+  color: var(--lc-text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.summary-input {
+  resize: vertical;
+  min-height: 84px;
+  line-height: 1.55;
 }
 
 .tag-box {
@@ -257,7 +433,7 @@ function focusTagInput() {
 }
 
 .status {
-  margin: var(--lc-space-4) 0 0;
+  margin: 0;
   font-size: var(--lc-text-sm);
   color: var(--lc-emerald);
 }
@@ -269,7 +445,6 @@ function focusTagInput() {
 .actions {
   display: grid;
   gap: var(--lc-space-2);
-  margin-top: var(--lc-space-4);
 }
 
 .btn {
@@ -314,8 +489,12 @@ function focusTagInput() {
     grid-template-columns: 1fr;
   }
 
+  .write-side {
+    position: static;
+  }
+
   .write-main {
-    min-height: 420px;
+    min-height: 0;
   }
 }
 </style>

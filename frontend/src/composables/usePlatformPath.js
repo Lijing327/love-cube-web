@@ -105,9 +105,9 @@ export function usePlatformPath() {
   }
 
   function articlesWritePath() {
-    if (route.path.startsWith('/pc')) return '/pc/platform/articles/write'
     if (route.path.startsWith('/m/platform')) return '/m/platform/articles/write'
-    return '/platform/articles'
+    if (route.path.startsWith('/pc')) return '/pc/platform/articles/write'
+    return '/platform/articles?write=1'
   }
 
   const isMobileShell = computed(() => route.path.startsWith('/m/platform'))

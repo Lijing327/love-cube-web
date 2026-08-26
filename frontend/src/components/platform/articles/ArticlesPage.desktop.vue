@@ -5,7 +5,7 @@
         <p class="hero-kicker">Featured Content</p>
         <h1>精选内容</h1>
         <p>精选攻略、平台公告与活动资讯，一站式浏览。</p>
-        <button type="button" class="publish-entry-btn" @click="openPublishDialog">{{ useWritePage ? '写文章' : '发布内容' }}</button>
+        <button type="button" class="publish-entry-btn" @click="goWrite">写文章</button>
       </div>
       <div class="hero-visual" aria-hidden="true">
         <img :src="heroImage" alt="" />
@@ -161,78 +161,14 @@
         </section>
       </aside>
     </section>
-
-    <div v-if="publishDialogVisible" class="publish-mask" @click.self="closePublishDialog">
-      <section class="publish-dialog">
-        <header class="publish-head">
-          <h2>发布精选内容</h2>
-          <button type="button" class="publish-close" @click="closePublishDialog">关闭</button>
-        </header>
-        <form class="publish-form" @submit.prevent="submitPublish">
-          <label>
-            <span>标题</span>
-            <input v-model.trim="publishForm.title" type="text" maxlength="80" placeholder="请输入标题（最多80字）" />
-          </label>
-          <label>
-            <span>摘要</span>
-            <textarea v-model.trim="publishForm.summary" rows="2" maxlength="180" placeholder="请填写摘要（最多180字）" />
-          </label>
-          <label>
-            <span>分类</span>
-            <select v-model="publishForm.category">
-              <option v-for="cat in categories.filter(item => item.value !== 'all')" :key="cat.value" :value="cat.value">
-                {{ cat.label }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>封面图（选填）</span>
-            <div class="publish-cover-wrap">
-              <img v-if="publishForm.coverUrl" :src="publishForm.coverUrl" alt="封面图预览" class="publish-cover-preview" />
-              <div class="publish-cover-actions">
-                <button
-                  type="button"
-                  class="publish-cover-btn"
-                  :disabled="publishSubmitting || coverUploading"
-                  @click="handlePickCover"
-                >
-                  {{ coverUploading ? '上传中...' : (publishForm.coverUrl ? '更换图片' : '上传封面图') }}
-                </button>
-                <button
-                  v-if="publishForm.coverUrl"
-                  type="button"
-                  class="publish-cover-remove"
-                  :disabled="publishSubmitting || coverUploading"
-                  @click="removeCover"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
-          </label>
-          <label>
-            <span>正文</span>
-            <textarea v-model.trim="publishForm.content" rows="8" maxlength="5000" placeholder="请输入正文内容..." />
-          </label>
-          <p v-if="publishMessage" class="publish-message" :class="{ 'is-error': publishError }">{{ publishMessage }}</p>
-          <div class="publish-actions">
-            <button type="button" class="publish-cancel" :disabled="publishSubmitting" @click="closePublishDialog">取消</button>
-            <button type="submit" class="publish-submit" :disabled="publishSubmitting">
-              {{ publishSubmitting ? '提交中...' : '提交发布' }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchArticles, fetchHotTopics, fetchRecommendedAuthors, submitArticle } from '@/api/platformContent.js'
+import { fetchArticles, fetchHotTopics, fetchRecommendedAuthors } from '@/api/platformContent.js'
 import { useUserStore } from '@/stores/user.js'
-import { useImageUpload } from '@/composables/useImageUpload.js'
 import { usePlatformPath } from '@/composables/usePlatformPath.js'
 import heroImage from '@/assets/首页首屏右侧大图.webp'
 import leadImage from '@/assets/联谊专区.webp'
@@ -253,28 +189,13 @@ const userStore = useUserStore()
 const { articlesWritePath } = usePlatformPath()
 const resolvedWritePath = computed(() => {
   const fromProp = String(props.writePath || '').trim()
-  if (fromProp.endsWith('/write')) return fromProp
-  const fromShell = articlesWritePath()
-  return fromShell.endsWith('/write') ? fromShell : ''
+  return fromProp || articlesWritePath()
 })
-const useWritePage = computed(() => Boolean(resolvedWritePath.value))
 const loading = ref(false)
 const allItems = ref([])
 const activeCategory = ref('all')
 const sortMode = ref('latest')
 const page = ref(1)
-const publishDialogVisible = ref(false)
-const publishSubmitting = ref(false)
-const publishMessage = ref('')
-const publishError = ref(false)
-const { pickAndUpload, uploading: coverUploading } = useImageUpload()
-const publishForm = reactive({
-  title: '',
-  summary: '',
-  category: '平台资讯',
-  coverUrl: '',
-  content: ''
-})
 
 const categories = [
   { label: '全部', value: 'all' },
@@ -387,86 +308,23 @@ function formatHeat(val) {
   return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n)
 }
 
-function openPublishDialog() {
-  const nextPath = resolvedWritePath.value || '/articles'
+function goWrite() {
+  const nextPath = resolvedWritePath.value
   if (!userStore.isLoggedIn) {
     userStore.setPostLoginRedirect(nextPath)
-    router.push({ path: '/login', query: { redirect: nextPath } })
-    return
-  }
-  if (resolvedWritePath.value) {
-    router.push(resolvedWritePath.value)
-    return
-  }
-  publishDialogVisible.value = true
-  publishMessage.value = ''
-  publishError.value = false
-}
-
-function closePublishDialog() {
-  if (publishSubmitting.value) return
-  publishDialogVisible.value = false
-}
-
-function resetPublishForm() {
-  publishForm.title = ''
-  publishForm.summary = ''
-  publishForm.category = '平台资讯'
-  publishForm.coverUrl = ''
-  publishForm.content = ''
-}
-
-async function handlePickCover() {
-  publishMessage.value = ''
-  publishError.value = false
-  try {
-    const coverUrl = await pickAndUpload({ quality: 0.8 })
-    if (!coverUrl) {
-      throw new Error('上传失败，请重试')
+    if (nextPath.includes('?')) {
+      router.push('/login')
+    } else {
+      router.push({ path: '/login', query: { redirect: nextPath } })
     }
-    publishForm.coverUrl = coverUrl
-  } catch (error) {
-    publishError.value = true
-    publishMessage.value = error?.message || '封面图上传失败，请稍后重试'
-  }
-}
-
-function removeCover() {
-  publishForm.coverUrl = ''
-}
-
-async function submitPublish() {
-  publishMessage.value = ''
-  publishError.value = false
-  const title = publishForm.title.trim()
-  const content = publishForm.content.trim()
-  if (!title || !content) {
-    publishError.value = true
-    publishMessage.value = '请填写标题和正文'
     return
   }
-  publishSubmitting.value = true
-  try {
-    await submitArticle({
-      title,
-      summary: publishForm.summary.trim(),
-      category: publishForm.category,
-      tag: publishForm.category,
-      coverUrl: publishForm.coverUrl.trim(),
-      content
-    })
-    publishMessage.value = '投稿已提交，待管理员审核发布'
-    resetPublishForm()
-    window.setTimeout(() => {
-      publishDialogVisible.value = false
-      publishMessage.value = ''
-    }, 1200)
-  } catch (error) {
-    publishError.value = true
-    publishMessage.value = error.message || '提交失败，请稍后重试'
-  } finally {
-    publishSubmitting.value = false
+  if (nextPath.includes('?')) {
+    const [path, qs] = nextPath.split('?')
+    router.push({ path, query: Object.fromEntries(new URLSearchParams(qs)) })
+    return
   }
+  router.push(nextPath)
 }
 
 onMounted(async () => {
@@ -1066,188 +924,6 @@ onMounted(async () => {
 .empty-state {
   margin-top: 24px;
   padding: 28px;
-}
-
-.publish-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 210;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  background: rgba(15, 23, 42, 0.45);
-}
-
-.publish-dialog {
-  width: min(760px, 100%);
-  max-height: calc(100vh - 40px);
-  overflow: auto;
-  border-radius: 16px;
-  background: var(--lc-surface);
-  border: 1px solid #e6edf7;
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
-}
-
-.publish-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid var(--lc-soft-alt);
-}
-
-.publish-head h2 {
-  margin: 0;
-  color: var(--lc-text);
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.publish-close {
-  border: 1px solid #dbe4f2;
-  border-radius: 8px;
-  background: var(--lc-surface);
-  color: var(--lc-muted-light);
-  min-height: 32px;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.publish-form {
-  padding: 16px 20px 20px;
-  display: grid;
-  gap: 12px;
-}
-
-.publish-form label {
-  display: grid;
-  gap: 6px;
-}
-
-.publish-form span {
-  color: var(--lc-slate);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.publish-form input,
-.publish-form select,
-.publish-form textarea {
-  width: 100%;
-  border: 1px solid var(--lc-border);
-  border-radius: 8px;
-  background: var(--lc-surface);
-  color: var(--lc-text);
-  font: inherit;
-  font-size: 14px;
-  padding: 10px 12px;
-  box-sizing: border-box;
-}
-
-.publish-form textarea {
-  resize: vertical;
-}
-
-.publish-cover-wrap {
-  display: grid;
-  gap: 8px;
-}
-
-.publish-cover-preview {
-  width: 100%;
-  max-width: 260px;
-  aspect-ratio: 16 / 9;
-  border-radius: 8px;
-  border: 1px solid var(--lc-border);
-  object-fit: cover;
-  background: var(--lc-bg);
-}
-
-.publish-cover-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.publish-cover-btn,
-.publish-cover-remove {
-  min-height: 34px;
-  border-radius: 8px;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.publish-cover-btn {
-  border: 1px solid var(--lc-border);
-  background: var(--lc-surface);
-  color: var(--lc-slate);
-}
-
-.publish-cover-remove {
-  border: 1px solid var(--lc-red-light);
-  background: #fff1f2;
-  color: #be123c;
-}
-
-.publish-cover-btn:disabled,
-.publish-cover-remove:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.publish-message {
-  margin: 0;
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: #15803d;
-  background: #ecfdf3;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.publish-message.is-error {
-  color: var(--lc-red);
-  background: var(--lc-red-light);
-}
-
-.publish-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.publish-cancel,
-.publish-submit {
-  min-height: 36px;
-  border-radius: 8px;
-  padding: 0 14px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.publish-cancel {
-  border: 1px solid var(--lc-border);
-  background: var(--lc-surface);
-  color: var(--lc-muted);
-}
-
-.publish-submit {
-  border: 1px solid var(--lc-rose);
-  background: var(--lc-rose);
-  color: var(--lc-surface);
-}
-
-.publish-submit:disabled,
-.publish-cancel:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 @media (max-width: 1440px) {

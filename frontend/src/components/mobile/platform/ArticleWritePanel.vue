@@ -4,7 +4,7 @@
       <button type="button" class="back" aria-label="返回" @click="goBack()">‹</button>
       <div>
         <h1>写文章</h1>
-        <p>提交后待审核，通过后出现在精选内容</p>
+        <p>封面、分类会出现在精选内容卡片上，提交后待审核</p>
       </div>
     </header>
 
@@ -17,6 +17,45 @@
           :maxlength="limits.title"
           placeholder="请输入标题"
         >
+      </label>
+
+      <label class="field">
+        <span>封面图</span>
+        <img v-if="form.coverUrl" :src="form.coverUrl" alt="封面预览" class="cover-preview">
+        <div class="cover-actions">
+          <button type="button" class="cover-btn" :disabled="submitting || coverUploading" @click="pickCover">
+            {{ coverUploading ? '上传中…' : (form.coverUrl ? '更换封面' : '上传封面') }}
+          </button>
+          <button
+            v-if="form.coverUrl"
+            type="button"
+            class="cover-btn danger"
+            :disabled="submitting || coverUploading"
+            @click="removeCover"
+          >
+            删除
+          </button>
+        </div>
+        <small>选填，用于精选内容卡片缩略图</small>
+      </label>
+
+      <label class="field">
+        <span>分类 <em>*</em></span>
+        <select v-model="form.category">
+          <option v-for="item in categories" :key="item" :value="item">{{ item }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>摘要</span>
+        <textarea
+          v-model="form.summary"
+          rows="3"
+          :maxlength="limits.summary"
+          placeholder="一句话介绍这篇文章"
+          class="summary"
+        />
+        <small>选填 {{ form.summary.length }}/{{ limits.summary }}，不填则截取正文开头</small>
       </label>
 
       <label class="field">
@@ -72,13 +111,17 @@ const {
   form,
   tags,
   submitting,
+  coverUploading,
   message,
   isError,
   removeTag,
   onTagKeydown,
   onTagBlur,
+  pickCover,
+  removeCover,
   submit,
-  limits
+  limits,
+  categories
 } = useArticleWrite({ listPath: props.listPath })
 </script>
 
@@ -162,6 +205,58 @@ const {
   resize: vertical;
   min-height: 220px;
   line-height: 1.7;
+}
+
+.field textarea.summary {
+  min-height: 88px;
+}
+
+.field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  padding: var(--lc-space-3);
+  font: inherit;
+  background: var(--lc-surface);
+  color: var(--lc-text);
+}
+
+.cover-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border);
+  background: var(--lc-bg);
+}
+
+.cover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lc-space-2);
+}
+
+.cover-btn {
+  height: 36px;
+  padding: 0 var(--lc-space-3);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  background: var(--lc-surface);
+  color: var(--lc-text);
+  font-size: var(--lc-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cover-btn.danger {
+  color: var(--lc-red);
+  border-color: var(--lc-red-light);
+}
+
+.cover-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .field small {

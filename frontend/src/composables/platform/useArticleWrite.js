@@ -1,6 +1,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { submitArticle } from '@/api/platformContent.js'
+import { useImageUpload } from '@/composables/useImageUpload.js'
 
 export const ARTICLE_WRITE_LIMITS = {
   title: 80,
@@ -10,15 +11,28 @@ export const ARTICLE_WRITE_LIMITS = {
   summary: 180
 }
 
+export const ARTICLE_WRITE_CATEGORIES = [
+  '平台资讯',
+  '活动指南',
+  '活动中心',
+  '平台攻略',
+  'AI工具',
+  '本地服务'
+]
+
 export function useArticleWrite(options = {}) {
   const router = useRouter()
   const listPath = options.listPath || '/pc/platform/articles'
+  const { pickAndUpload, uploading: coverUploading } = useImageUpload()
   const submitting = ref(false)
   const message = ref('')
   const isError = ref(false)
   const tags = ref([])
   const form = reactive({
     title: '',
+    summary: '',
+    category: ARTICLE_WRITE_CATEGORIES[0],
+    coverUrl: '',
     content: '',
     tagDraft: ''
   })
@@ -63,6 +77,36 @@ export function useArticleWrite(options = {}) {
     addTag(form.tagDraft)
   }
 
+  async function pickCover() {
+    message.value = ''
+    isError.value = false
+    try {
+      const url = await pickAndUpload({ quality: 0.8 })
+      if (!url) {
+        throw new Error('上传失败，请重试')
+      }
+      form.coverUrl = url
+    } catch (error) {
+      if (error?.message === '未选择文件') return
+      isError.value = true
+      message.value = error?.message || '封面图上传失败，请稍后重试'
+    }
+  }
+
+  function removeCover() {
+    form.coverUrl = ''
+  }
+
+  function resetForm() {
+    form.title = ''
+    form.summary = ''
+    form.category = ARTICLE_WRITE_CATEGORIES[0]
+    form.coverUrl = ''
+    form.content = ''
+    form.tagDraft = ''
+    tags.value = []
+  }
+
   async function submit() {
     message.value = ''
     isError.value = false
@@ -76,21 +120,23 @@ export function useArticleWrite(options = {}) {
     if (form.tagDraft.trim()) {
       addTag(form.tagDraft)
     }
+    const summary = form.summary.trim() || content.slice(0, ARTICLE_WRITE_LIMITS.summary)
+    const category = ARTICLE_WRITE_CATEGORIES.includes(form.category)
+      ? form.category
+      : ARTICLE_WRITE_CATEGORIES[0]
     submitting.value = true
     try {
       await submitArticle({
         title,
         content,
-        summary: content.slice(0, ARTICLE_WRITE_LIMITS.summary),
+        summary,
+        category,
+        coverUrl: form.coverUrl.trim(),
         tags: tags.value,
-        tag: tags.value.join(','),
-        category: '平台资讯'
+        tag: tags.value.join(',')
       })
       message.value = '投稿已提交，待管理员审核发布'
-      form.title = ''
-      form.content = ''
-      form.tagDraft = ''
-      tags.value = []
+      resetForm()
       window.setTimeout(() => {
         router.push(listPath)
       }, 1000)
@@ -108,13 +154,17 @@ export function useArticleWrite(options = {}) {
     form,
     tags,
     submitting,
+    coverUploading,
     message,
     isError,
     addTag,
     removeTag,
     onTagKeydown,
     onTagBlur,
+    pickCover,
+    removeCover,
     submit,
-    limits: ARTICLE_WRITE_LIMITS
+    limits: ARTICLE_WRITE_LIMITS,
+    categories: ARTICLE_WRITE_CATEGORIES
   }
 }
